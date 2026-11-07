@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Sultán">
 <meta name="mobile-web-app-capable" content="yes">
-<title>Tratamiento Sultán · Salud Canina</title>
+<title>Tratamiento Sultán · Panel Médico & IA</title>
 
 <!-- Tailwind & Phosphor Icons -->
 <script src="https://cdn.tailwindcss.com"></script>
@@ -26,27 +26,9 @@ tailwind.config = {
   theme: {
     extend: {
       colors: {
-        cream: {
-          50: '#FAF7F2',
-          100: '#F4EFE6',
-          200: '#E9E1D2',
-          300: '#DCCFBA',
-        },
-        olive: {
-          50: '#F2F6ED',
-          100: '#E2ECD8',
-          200: '#C7DCA7',
-          500: '#648842',
-          600: '#4E6E38',
-          700: '#3D572B',
-          800: '#2F4321',
-        },
-        sand: {
-          100: '#EFE8DC',
-          200: '#E4D8C4',
-          300: '#CEBEA5',
-          800: '#5C4F3D',
-        },
+        cream: { 50: '#FAF7F2', 100: '#F4EFE6', 200: '#E9E1D2', 300: '#DCCFBA' },
+        olive: { 50: '#F2F6ED', 100: '#E2ECD8', 200: '#C7DCA7', 500: '#648842', 600: '#4E6E38', 700: '#3D572B', 800: '#2F4321' },
+        sand: { 100: '#EFE8DC', 200: '#E4D8C4', 300: '#CEBEA5', 800: '#5C4F3D' },
         bark: '#2C2621',
       },
       fontFamily: {
@@ -68,7 +50,7 @@ tailwind.config = {
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   @keyframes ring { 0%, 100% { transform: rotate(0); } 20% { transform: rotate(14deg); } 40% { transform: rotate(-14deg); } 60% { transform: rotate(10deg); } 80% { transform: rotate(-10deg); } }
-  .animate-ring { animation: ring 1s ease-in-out infinite; }
+  .animate-ring { animation: ring 0.9s ease-in-out infinite; }
   .safe-top { padding-top: max(0.75rem, env(safe-area-inset-top)); }
   .safe-bottom { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
   button { touch-action: manipulation; }
@@ -77,22 +59,35 @@ tailwind.config = {
 <body class="min-h-full bg-[#F4EFE6] text-[#2C2621] antialiased selection:bg-olive-200">
 
 <!-- ============================================================================== -->
-<!-- MODAL ALARMA MEDICACIÓN -->
+<!-- BANNER DE PERMISOS DE ALARMA / NOTIFICACIÓN (SI ESTÁN PENDIENTES) -->
 <!-- ============================================================================== -->
-<div id="alarmModal" class="fixed inset-0 z-[100] bg-black/60 backdrop-blur-md hidden items-center justify-center p-4">
-  <div class="bg-[#FAF7F2] border-2 border-olive-500 rounded-[32px] p-6 sm:p-8 max-w-sm w-full shadow-2xl text-center relative overflow-hidden safe-bottom">
+<div id="notifBanner" class="bg-amber-100 border-b border-amber-300 text-amber-900 px-4 py-2.5 flex items-center justify-between text-xs sticky top-0 z-[80] shadow-sm">
+  <div class="flex items-center gap-2">
+    <i class="ph-bold ph-bell-ringing text-amber-700 text-base animate-bounce"></i>
+    <span><strong>Activa las alarmas:</strong> Permite avisos sonoros y en pantalla.</span>
+  </div>
+  <button onclick="requestNotifications()" class="px-3 py-1 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-bold rounded-lg text-[11px] shadow-sm transition">
+    Activar
+  </button>
+</div>
+
+<!-- ============================================================================== -->
+<!-- MODAL ALARMA MEDICACIÓN CON SONIDO FUERTE -->
+<!-- ============================================================================== -->
+<div id="alarmModal" class="fixed inset-0 z-[100] bg-black/70 backdrop-blur-md hidden items-center justify-center p-4">
+  <div class="bg-[#FAF7F2] border-2 border-olive-500 rounded-[32px] p-6 sm:p-8 max-w-sm w-full shadow-2xl text-center relative overflow-hidden safe-bottom animate-bounce-short">
     <div class="w-20 h-20 bg-olive-100 text-olive-700 rounded-full mx-auto flex items-center justify-center text-4xl mb-4 shadow-inner animate-ring">
       <i class="ph-bold ph-bell-ringing"></i>
     </div>
-    <span class="inline-block text-[10px] font-bold tracking-widest text-olive-700 uppercase bg-olive-200/70 px-3 py-1 rounded-full mb-2">⏰ Hora de la toma</span>
+    <span class="inline-block text-[10px] font-black tracking-widest text-olive-700 uppercase bg-olive-200 px-3 py-1 rounded-full mb-2">⏰ HORA DE LA TOMA</span>
     <h3 id="modalDoseName" class="text-2xl font-black text-[#2C2621] mb-1">—</h3>
-    <p id="modalDoseTime" class="text-olive-700 font-mono font-bold text-lg mb-1">--:--</p>
-    <p id="modalDoseDetail" class="text-[#6A6055] text-xs mb-6">—</p>
+    <p id="modalDoseTime" class="text-olive-700 font-mono font-black text-lg mb-1">--:--</p>
+    <p id="modalDoseDetail" class="text-[#6A6055] text-xs mb-6 font-medium">—</p>
     <div class="space-y-2.5">
       <button onclick="confirmCurrentAlarm()" class="w-full py-4 bg-olive-600 hover:bg-olive-700 active:scale-95 text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-olive-600/30 flex items-center justify-center gap-2 transition">
         <i class="ph-bold ph-check-circle text-lg"></i> Confirmar Administrado
       </button>
-      <button onclick="snoozeAlarm(10)" class="w-full py-3.5 bg-cream-200/80 hover:bg-cream-300 active:scale-95 text-[#5C4F3D] font-bold text-xs rounded-2xl border border-sand-300 flex items-center justify-center gap-2 transition">
+      <button onclick="snoozeAlarm(10)" class="w-full py-3 bg-cream-200 hover:bg-cream-300 active:scale-95 text-[#5C4F3D] font-bold text-xs rounded-2xl border border-sand-300 flex items-center justify-center gap-2 transition">
         <i class="ph-bold ph-clock-afternoon text-base"></i> Posponer 10 min
       </button>
     </div>
@@ -101,12 +96,71 @@ tailwind.config = {
 </div>
 
 <!-- ============================================================================== -->
-<!-- CONTENEDOR APP MOBILE-FIRST (Estilo diseño de referencia) -->
+<!-- MODAL CRUD: AGREGAR / EDITAR FÁRMACO -->
+<!-- ============================================================================== -->
+<div id="medModal" class="fixed inset-0 z-[95] bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
+  <div class="bg-[#FAF7F2] border border-sand-300 rounded-[32px] p-6 max-w-sm w-full shadow-2xl relative">
+    <div class="flex items-center justify-between mb-4">
+      <h3 id="medModalTitle" class="text-base font-black text-[#2C2621] flex items-center gap-2">
+        <i class="ph-bold ph-pill text-olive-600"></i> Nuevo Fármaco
+      </h3>
+      <button onclick="closeMedModal()" class="w-8 h-8 rounded-full bg-sand-100 hover:bg-sand-200 text-[#5C4F3D] flex items-center justify-center">
+        <i class="ph-bold ph-x"></i>
+      </button>
+    </div>
+
+    <form onsubmit="handleSaveMedication(event)" class="space-y-3">
+      <input type="hidden" id="medFormId">
+      
+      <div>
+        <label class="block text-[10px] font-bold text-[#7A6E60] uppercase mb-1">Nombre del Medicamento</label>
+        <input type="text" id="medFormName" required placeholder="Ej: Doxiciclina 100mg" class="w-full bg-white border border-sand-200 rounded-xl px-3 py-2 text-xs text-[#2C2621] focus:outline-none focus:border-olive-600">
+      </div>
+
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="block text-[10px] font-bold text-[#7A6E60] uppercase mb-1">Dosis Exacta</label>
+          <input type="text" id="medFormDose" required placeholder="Ej: 2 cc / 1 tab" class="w-full bg-white border border-sand-200 rounded-xl px-3 py-2 text-xs text-[#2C2621] focus:outline-none focus:border-olive-600">
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-[#7A6E60] uppercase mb-1">Horario (HH:MM)</label>
+          <input type="time" id="medFormTime" required class="w-full bg-white border border-sand-200 rounded-xl px-3 py-2 text-xs text-[#2C2621] font-mono focus:outline-none focus:border-olive-600">
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-[10px] font-bold text-[#7A6E60] uppercase mb-1">Tipo de Presentación</label>
+        <select id="medFormType" class="w-full bg-white border border-sand-200 rounded-xl px-3 py-2 text-xs text-[#2C2621] focus:outline-none focus:border-olive-600">
+          <option value="pill">Píldora / Tableta</option>
+          <option value="liquid">Líquido / Jarabe / Gotas</option>
+          <option value="syringe">Suero / Inyección Subcutánea</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-[10px] font-bold text-[#7A6E60] uppercase mb-1">¿Para qué sirve? / Instrucciones</label>
+        <textarea id="medFormDetail" rows="2" placeholder="Ej: Antibiótico principal. Dar siempre con comida. Cero lácteos." class="w-full bg-white border border-sand-200 rounded-xl px-3 py-2 text-xs text-[#2C2621] focus:outline-none focus:border-olive-600"></textarea>
+      </div>
+
+      <div class="pt-2 flex gap-2">
+        <button type="submit" class="flex-1 py-3 bg-olive-600 hover:bg-olive-700 active:scale-95 text-white font-extrabold text-xs rounded-xl shadow-sm transition">
+          Guardar en Base de Datos
+        </button>
+        <button type="button" onclick="closeMedModal()" class="px-4 py-3 bg-sand-100 hover:bg-sand-200 text-[#5C4F3D] font-bold text-xs rounded-xl transition">
+          Cancelar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============================================================================== -->
+<!-- CONTENEDOR APP MOBILE-FIRST -->
 <!-- ============================================================================== -->
 <div class="max-w-md mx-auto min-h-screen flex flex-col safe-top pb-24 px-4 sm:px-0">
 
   <!-- TOP BAR / HEADER -->
-  <header class="py-3 flex items-center justify-between border-b border-sand-200 mb-3">
+  <header class="py-2.5 flex items-center justify-between border-b border-sand-200 mb-3">
     <div class="flex items-center gap-2.5">
       <div class="w-10 h-10 rounded-2xl bg-olive-600 text-white flex items-center justify-center text-xl shadow-sm">
         <i class="ph-bold ph-paw-print"></i>
@@ -114,7 +168,9 @@ tailwind.config = {
       <div>
         <div class="flex items-center gap-2">
           <h1 class="text-base font-black tracking-tight text-[#2C2621]">Sultán</h1>
-          <span class="text-[9px] font-extrabold bg-olive-100 text-olive-700 border border-olive-200 px-2 py-0.5 rounded-full">Día <span id="hdrDayNumber">1</span> de 21</span>
+          <span class="text-[9px] font-extrabold bg-olive-100 text-olive-700 border border-olive-200 px-2 py-0.5 rounded-full">
+            Día <span id="hdrDayNumber">1</span> de 21
+          </span>
         </div>
         <p class="text-[10px] text-[#6A6055] flex items-center gap-1">
           <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" id="cloudStatusDot"></span>
@@ -125,11 +181,11 @@ tailwind.config = {
 
     <!-- Quick Audio & Alarm Test -->
     <div class="flex items-center gap-1.5">
-      <button onclick="testAlarm()" title="Probar Alarma" class="w-8 h-8 rounded-xl bg-sand-100 hover:bg-sand-200 border border-sand-200 text-[#5C4F3D] flex items-center justify-center text-sm transition">
+      <button onclick="testAlarm()" title="Probar Alarma Sonora" class="w-8 h-8 rounded-xl bg-sand-100 hover:bg-sand-200 border border-sand-200 text-[#5C4F3D] flex items-center justify-center text-sm transition">
         <i class="ph-bold ph-speaker-high"></i>
       </button>
-      <button onclick="requestNotifications()" id="btnNotif" title="Notificaciones" class="w-8 h-8 rounded-xl bg-sand-100 hover:bg-sand-200 border border-sand-200 text-[#5C4F3D] flex items-center justify-center text-sm transition">
-        <i class="ph-bold ph-bell"></i>
+      <button onclick="sendQuickWhatsAppReport()" title="Enviar WhatsApp a mi número" class="w-8 h-8 rounded-xl bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 text-emerald-800 flex items-center justify-center text-sm transition">
+        <i class="ph-bold ph-whatsapp-logo"></i>
       </button>
       <button onclick="toggleSound()" id="btnSound" title="Silenciar" class="w-8 h-8 rounded-xl bg-sand-100 hover:bg-sand-200 border border-sand-200 text-[#5C4F3D] flex items-center justify-center text-sm transition">
         <i id="soundIcon" class="ph-bold ph-speaker-simple-high"></i>
@@ -142,25 +198,23 @@ tailwind.config = {
   <!-- ============================================================================== -->
   <main id="view-cronograma" class="app-view space-y-4">
     <div class="flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <h2 class="text-lg font-black tracking-wider text-[#2C2621] uppercase flex items-center gap-1.5">
-          Cronograma <i class="ph-bold ph-clock-afternoon text-olive-600"></i>
-        </h2>
-      </div>
+      <h2 class="text-lg font-black tracking-wider text-[#2C2621] uppercase flex items-center gap-1.5">
+        Cronograma <i class="ph-bold ph-clock-afternoon text-olive-600"></i>
+      </h2>
       <div class="text-right">
         <div id="liveClock" class="text-xs font-mono font-bold text-olive-700">--:--:--</div>
-        <div id="nextDoseMini" class="text-[10px] text-[#7A6E60]">Próxima dosis en <span id="nextDoseCount" class="font-mono font-bold text-olive-600">--:--</span></div>
+        <div id="nextDoseMini" class="text-[10px] text-[#7A6E60]">Próxima dosis: <span id="nextDoseCount" class="font-mono font-bold text-olive-600">--:--</span></div>
       </div>
     </div>
 
-    <!-- Barra de progreso diario -->
+    <!-- Barra de progreso diario (Se actualiza y guarda automáticamente) -->
     <div class="bg-white/80 border border-sand-200 rounded-2xl p-3 shadow-sm flex items-center justify-between gap-3">
       <div class="flex items-center gap-2.5">
         <div class="w-9 h-9 rounded-xl bg-olive-100 text-olive-700 flex items-center justify-center text-lg">
           <i class="ph-bold ph-pill"></i>
         </div>
         <div>
-          <span class="text-[10px] text-[#7A6E60] font-semibold block uppercase">Tomas de hoy</span>
+          <span class="text-[10px] text-[#7A6E60] font-semibold block uppercase">Progreso de hoy</span>
           <span id="statProgressText" class="text-xs font-extrabold text-[#2C2621]">0 de 10 completadas</span>
         </div>
       </div>
@@ -172,152 +226,60 @@ tailwind.config = {
       </div>
     </div>
 
-    <!-- Lista de tomas con línea vertical conectora (Igual al screenshot) -->
+    <!-- Lista de tomas con línea vertical conectora (Estilo exacto screenshot 2) -->
     <div class="relative pl-3">
-      <!-- Línea vertical conectora -->
       <div class="absolute left-10 top-6 bottom-6 w-0.5 bg-[#DCCFBA]"></div>
-      
       <div id="timelineContainer" class="space-y-4 relative">
-        <!-- Generado dinámicamente -->
+        <!-- Render dinámico desde Supabase -->
       </div>
     </div>
 
-    <!-- Botones de acción rápida -->
+    <!-- Botón WhatsApp Directo al número del usuario (04123504829) -->
     <div class="pt-2 flex gap-2">
-      <button onclick="sendQuickWhatsAppReport()" class="flex-1 py-3 bg-[#4E6E38] hover:bg-olive-700 active:scale-95 text-white font-extrabold text-xs rounded-2xl shadow-sm flex items-center justify-center gap-2 transition">
-        <i class="ph-bold ph-whatsapp-logo text-base"></i> Enviar Reporte al Dr. Marcano
+      <button onclick="sendQuickWhatsAppReport()" class="flex-1 py-3.5 bg-[#4E6E38] hover:bg-olive-700 active:scale-95 text-white font-extrabold text-xs rounded-2xl shadow-sm flex items-center justify-center gap-2 transition">
+        <i class="ph-bold ph-whatsapp-logo text-base"></i> Enviar Reporte a mi WhatsApp (0412-3504829)
       </button>
-      <button onclick="resetToday()" class="px-4 py-3 bg-white border border-sand-200 text-[#7A6E60] hover:text-amber-700 font-bold text-xs rounded-2xl transition" title="Reiniciar tomas de hoy">
+      <button onclick="resetToday()" class="px-4 py-3.5 bg-white border border-sand-200 text-[#7A6E60] hover:text-amber-700 font-bold text-xs rounded-2xl transition" title="Reiniciar tomas de hoy">
         <i class="ph-bold ph-arrows-counter-clockwise"></i>
       </button>
     </div>
   </main>
 
   <!-- ============================================================================== -->
-  <!-- VISTA 2: INVENTARIO (SCREENSHOT 1) -->
+  <!-- VISTA 2: INVENTARIO & CRUD FÁRMACOS (SCREENSHOT 1) -->
   <!-- ============================================================================== -->
   <main id="view-inventario" class="app-view hidden space-y-4">
     <div class="flex items-center justify-between">
       <h2 class="text-lg font-black tracking-wider text-[#2C2621] uppercase flex items-center gap-1.5">
         Inventario <i class="ph-bold ph-pill text-olive-600"></i>
       </h2>
-      <span class="text-[10px] font-bold bg-white border border-sand-200 text-olive-700 px-2.5 py-1 rounded-full">5 Medicamentos</span>
+      <button onclick="openAddMedModal()" class="px-3 py-1.5 bg-olive-600 hover:bg-olive-700 text-white text-xs font-bold rounded-xl flex items-center gap-1 shadow-sm active:scale-95 transition">
+        <i class="ph-bold ph-plus"></i> Agregar Fármaco
+      </button>
     </div>
 
-    <div class="space-y-3">
-      <!-- Omeprazol -->
-      <div class="bg-white border border-sand-200 rounded-2xl p-4 shadow-sm flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="w-11 h-11 rounded-xl bg-olive-50 border border-olive-100 flex items-center justify-center text-olive-600 text-xl shrink-0">
-            <i class="ph-bold ph-capsule"></i>
-          </div>
-          <div>
-            <h4 class="font-extrabold text-sm text-[#2C2621]">Omeprazol</h4>
-            <p class="text-[11px] text-[#7A6E60]">1 tableta · 08:00 AM · en ayunas</p>
-            <p class="text-[10px] text-olive-600 font-semibold mt-0.5">Protector gástrico previo a antibiótico</p>
-          </div>
-        </div>
-        <span class="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-olive-100 text-olive-700 border border-olive-200">En uso</span>
-      </div>
-
-      <!-- Doxiciclina -->
-      <div class="bg-white border border-sand-200 rounded-2xl p-4 shadow-sm flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="w-11 h-11 rounded-xl bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-700 text-xl shrink-0">
-            <i class="ph-bold ph-flask"></i>
-          </div>
-          <div>
-            <h4 class="font-extrabold text-sm text-[#2C2621]">Doxiciclina 100 mg</h4>
-            <p class="text-[11px] text-[#7A6E60]">2 cc · 09:00 AM · Vía oral</p>
-            <p class="text-[10px] text-amber-700 font-bold mt-0.5">⚠️ Siempre con comida. Cero lácteos.</p>
-          </div>
-        </div>
-        <span class="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-olive-100 text-olive-700 border border-olive-200">21 Días</span>
-      </div>
-
-      <!-- Metrifol -->
-      <div class="bg-white border border-sand-200 rounded-2xl p-4 shadow-sm flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="w-11 h-11 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-700 text-xl shrink-0">
-            <i class="ph-bold ph-drop-half"></i>
-          </div>
-          <div>
-            <h4 class="font-extrabold text-sm text-[#2C2621]">Metrifol</h4>
-            <p class="text-[11px] text-[#7A6E60]">2 cc · 10:00 AM · Vía oral</p>
-            <p class="text-[10px] text-olive-600 font-semibold mt-0.5">Protector y suplemento hepático</p>
-          </div>
-        </div>
-        <span class="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-olive-100 text-olive-700 border border-olive-200">En uso</span>
-      </div>
-
-      <!-- Pentaviral -->
-      <div class="bg-white border border-sand-200 rounded-2xl p-4 shadow-sm flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="w-11 h-11 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-700 text-xl shrink-0">
-            <i class="ph-bold ph-shield-plus"></i>
-          </div>
-          <div>
-            <h4 class="font-extrabold text-sm text-[#2C2621]">Pentaviral</h4>
-            <p class="text-[11px] text-[#7A6E60]">5 cc · 10:00 AM · Cada 24 horas</p>
-            <p class="text-[10px] text-olive-600 font-semibold mt-0.5">Inmunomodulador y defensas</p>
-          </div>
-        </div>
-        <span class="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-olive-100 text-olive-700 border border-olive-200">En uso</span>
-      </div>
-
-      <!-- Suero Subcutáneo -->
-      <div class="bg-white border border-sand-200 rounded-2xl p-4 shadow-sm flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="w-11 h-11 rounded-xl bg-cyan-50 border border-cyan-100 flex items-center justify-center text-cyan-700 text-xl shrink-0">
-            <i class="ph-bold ph-syringe"></i>
-          </div>
-          <div>
-            <h4 class="font-extrabold text-sm text-[#2C2621]">Suero Subcutáneo</h4>
-            <p class="text-[11px] text-[#7A6E60]">20 cc cada 4 horas (6 tomas/día)</p>
-            <p class="text-[10px] text-cyan-700 font-semibold mt-0.5">120 cc total diario. Alternar nuca y lomo.</p>
-          </div>
-        </div>
-        <span class="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-cyan-100 text-cyan-800 border border-cyan-200">Vital</span>
-      </div>
+    <!-- Lista dinámica de Fármacos con botones Editar y Eliminar (CRUD) -->
+    <div id="medsListContainer" class="space-y-3">
+      <!-- Generado dinámicamente desde Supabase -->
     </div>
 
-    <!-- Guía gráfica rápida de jeringas -->
-    <div class="bg-[#FAF7F2] border border-sand-200 rounded-3xl p-4 text-center">
-      <h3 class="text-xs font-black uppercase text-[#2C2621] tracking-wider mb-2 flex items-center justify-center gap-1.5">
-        <i class="ph-bold ph-syringe text-olive-600"></i> Medidas Exactas de Jeringas
-      </h3>
-      <div class="grid grid-cols-3 gap-2 text-center text-xs">
-        <div class="bg-white p-2.5 rounded-xl border border-sand-200">
-          <span class="block text-[9px] font-bold text-purple-700 uppercase">Doxiciclina</span>
-          <span class="text-base font-black text-[#2C2621]">2 cc</span>
-          <span class="block text-[9px] text-[#7A6E60]">Jeringa 3cc</span>
-        </div>
-        <div class="bg-white p-2.5 rounded-xl border border-sand-200">
-          <span class="block text-[9px] font-bold text-amber-700 uppercase">Pentaviral</span>
-          <span class="text-base font-black text-[#2C2621]">5 cc</span>
-          <span class="block text-[9px] text-[#7A6E60]">Jeringa 5cc llena</span>
-        </div>
-        <div class="bg-white p-2.5 rounded-xl border border-sand-200">
-          <span class="block text-[9px] font-bold text-cyan-700 uppercase">Suero</span>
-          <span class="text-base font-black text-[#2C2621]">20 cc</span>
-          <span class="block text-[9px] text-[#7A6E60]">4 × jeringa 5cc</span>
-        </div>
-      </div>
-    </div>
+    <!-- Botón Agregar Medicamento grande inferior estilo screenshot 1 -->
+    <button onclick="openAddMedModal()" class="w-full py-3.5 bg-[#4E6E38] hover:bg-olive-700 active:scale-95 text-white font-extrabold text-xs rounded-2xl shadow-sm flex items-center justify-center gap-2 transition">
+      <i class="ph-bold ph-plus-circle text-base"></i> + Agregar Medicamento a la Base de Datos
+    </button>
   </main>
 
   <!-- ============================================================================== -->
-  <!-- VISTA 3: CALENDARIO (SCREENSHOT 3) -->
+  <!-- VISTA 3: CALENDARIO 21 DÍAS (SCREENSHOT 3) -->
   <!-- ============================================================================== -->
   <main id="view-calendario" class="app-view hidden space-y-4">
     <div class="flex items-center justify-between">
       <h2 class="text-lg font-black tracking-wider text-[#2C2621] uppercase flex items-center gap-1.5">
         Calendario <i class="ph-bold ph-calendar text-olive-600"></i>
       </h2>
-      <span class="text-[10px] font-bold text-olive-700 bg-olive-100 border border-olive-200 px-2 py-0.5 rounded-full">21 Días</span>
+      <span class="text-[10px] font-bold text-olive-700 bg-olive-100 border border-olive-200 px-2.5 py-0.5 rounded-full">Automático</span>
     </div>
 
-    <!-- Tarjeta calendario estilo Screenshot 3 -->
     <div class="bg-[#FAF7F2] border border-sand-200 rounded-[28px] p-5 shadow-sm space-y-4">
       <div class="flex items-center justify-between text-xs font-bold text-[#5C4F3D] px-1">
         <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
@@ -334,7 +296,7 @@ tailwind.config = {
         </div>
         <div class="flex items-center gap-1.5">
           <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-          <span>Hoy</span>
+          <span>Hoy en curso</span>
         </div>
         <div class="flex items-center gap-1.5">
           <span class="w-2.5 h-2.5 rounded-full bg-sand-200"></span>
@@ -343,28 +305,17 @@ tailwind.config = {
       </div>
     </div>
 
-    <!-- Eventos y notas del tratamiento (Tarjeta inferior estilo Screenshot 3) -->
     <div class="bg-white border border-sand-200 rounded-[24px] p-4 shadow-sm space-y-3">
       <div class="flex items-start gap-3">
         <div class="w-2.5 h-2.5 rounded-full bg-olive-600 mt-1 shrink-0"></div>
         <div>
-          <h4 class="text-xs font-black text-[#2C2621]">Inicio Antibiótico Doxiciclina (21 días)</h4>
-          <p class="text-[10px] text-[#7A6E60]">Fecha de inicio: <input type="date" id="startDateInput" class="bg-sand-100 border border-sand-200 rounded px-1.5 py-0.5 text-[10px] font-semibold text-[#2C2621] ml-1"></p>
+          <h4 class="text-xs font-black text-[#2C2621]">Seguimiento Automático de Días</h4>
+          <p class="text-[10px] text-[#7A6E60]">Los días se marcan automáticamente al completar las tomas del día.</p>
         </div>
       </div>
-      <div class="flex items-start gap-3 pt-2 border-t border-sand-100">
-        <div class="w-2.5 h-2.5 rounded-full bg-cyan-600 mt-1 shrink-0"></div>
-        <div>
-          <h4 class="text-xs font-black text-[#2C2621]">Hidratación intensiva subcutánea</h4>
-          <p class="text-[10px] text-[#7A6E60]">20 cc cada 4 horas (00:00, 04:00, 08:00, 12:00, 16:00, 20:00)</p>
-        </div>
-      </div>
-      <div class="flex items-start gap-3 pt-2 border-t border-sand-100">
-        <div class="w-2.5 h-2.5 rounded-full bg-amber-500 mt-1 shrink-0"></div>
-        <div>
-          <h4 class="text-xs font-black text-[#2C2621]">Consulta de control médico</h4>
-          <p class="text-[10px] text-[#7A6E60]">Dr. José Marcano · Tel: 0416-9957400</p>
-        </div>
+      <div class="flex items-center justify-between pt-2 border-t border-sand-100">
+        <span class="text-xs font-bold text-[#2C2621]">Fecha de Inicio:</span>
+        <input type="date" id="startDateInput" class="bg-sand-100 border border-sand-200 rounded-lg px-2 py-1 text-xs font-bold text-[#2C2621]">
       </div>
     </div>
   </main>
@@ -373,10 +324,8 @@ tailwind.config = {
   <!-- VISTA 4: PERFIL DEL PERRO (SCREENSHOT 4) -->
   <!-- ============================================================================== -->
   <main id="view-perfil" class="app-view hidden space-y-4">
-    <!-- Tarjeta Verde Principal con Foto de Perro (Idéntico a Screenshot 4) -->
     <div class="bg-[#C7DCA7] border-2 border-olive-500/30 rounded-[32px] p-6 shadow-sm text-center relative overflow-hidden">
       
-      <!-- Marco Avatar del perro -->
       <div class="w-28 h-28 mx-auto rounded-3xl bg-[#FAF7F2] p-1.5 border-4 border-[#3D572B] shadow-md mb-3 flex items-center justify-center overflow-hidden">
         <div class="w-full h-full rounded-2xl bg-gradient-to-b from-[#E2ECD8] to-[#C7DCA7] flex items-center justify-center text-5xl text-[#3D572B]">
           <i class="ph-fill ph-dog"></i>
@@ -384,7 +333,7 @@ tailwind.config = {
       </div>
 
       <h3 class="text-2xl font-black text-[#2F4321]">Sultán</h3>
-      <p class="text-xs font-semibold text-[#3D572B]">Canino · Paciente en Cuidados Médicos</p>
+      <p class="text-xs font-semibold text-[#3D572B]">Canino · Cuidados Médicos Domiciliarios</p>
 
       <div class="grid grid-cols-2 gap-3 mt-4 pt-3 border-t border-olive-600/20 text-center">
         <div>
@@ -392,25 +341,24 @@ tailwind.config = {
           <span class="text-base font-black text-[#2F4321]">21 Días</span>
         </div>
         <div>
-          <span class="text-[10px] text-[#3D572B] font-bold uppercase tracking-wider block">Hidratación</span>
-          <span class="text-base font-black text-[#2F4321]">20cc / 4h</span>
+          <span class="text-[10px] text-[#3D572B] font-bold uppercase tracking-wider block">WhatsApp Reportes</span>
+          <span class="text-xs font-black text-[#2F4321]">0412-3504829</span>
         </div>
       </div>
 
-      <!-- Badges de Alergias y Condiciones (Estilo exacto screenshot 4) -->
       <div class="space-y-2 mt-4">
         <div class="bg-[#4E6E38] text-white text-[10px] font-black uppercase tracking-wider py-1.5 px-4 rounded-xl shadow-sm">
-          ALERGIAS / REGLA: CERO LÁCTEOS (Inactiva Doxi)
+          REGLA ESTRICTA: CERO LÁCTEOS CON DOXICICLINA
         </div>
         <div class="bg-[#3D572B] text-white text-[10px] font-black uppercase tracking-wider py-1.5 px-4 rounded-xl shadow-sm">
-          CONDICIÓN: TRATAMIENTO HEMOPARÁSITOS
+          HIDRATACIÓN: 20 CC SUERO CADA 4 HORAS
         </div>
       </div>
 
-      <!-- Tarjeta Vet de Emergencia inferior (Estilo exacto screenshot 4) -->
+      <!-- Tarjeta Vet de Emergencia -->
       <div class="bg-white/95 rounded-2xl p-3.5 mt-4 text-left flex items-center justify-between shadow-sm border border-olive-600/20">
         <div>
-          <span class="text-[9px] font-black text-[#7A6E60] uppercase tracking-wider block">VET DE EMERGENCIA</span>
+          <span class="text-[9px] font-black text-[#7A6E60] uppercase tracking-wider block">MÉDICO VETERINARIO</span>
           <span class="text-xs font-black text-[#2C2621]">Dr. José Marcano</span>
           <span class="text-[11px] font-mono font-bold text-olive-700 block">0416-9957400</span>
         </div>
@@ -418,18 +366,6 @@ tailwind.config = {
           <i class="ph-bold ph-phone-call"></i>
         </a>
       </div>
-    </div>
-
-    <!-- Ajustes del Cuidador y Nube -->
-    <div class="bg-white border border-sand-200 rounded-[24px] p-4 space-y-3">
-      <h4 class="text-xs font-black text-[#2C2621] uppercase tracking-wider flex items-center gap-1.5">
-        <i class="ph-bold ph-user text-olive-600"></i> Cuidador Registrado
-      </h4>
-      <div class="flex gap-2">
-        <input type="text" id="cfgUserName" placeholder="Tu nombre (ej: Jesús, Mamá)" class="flex-1 bg-sand-100 border border-sand-200 rounded-xl px-3 py-2 text-xs text-[#2C2621] focus:outline-none focus:border-olive-600">
-        <button onclick="saveCaregiverName()" class="px-3.5 py-2 bg-olive-600 text-white rounded-xl text-xs font-bold transition">Guardar</button>
-      </div>
-      <p class="text-[10px] text-[#7A6E60]">Las tomas marcadas quedarán registradas con este nombre en Supabase.</p>
     </div>
   </main>
 
@@ -443,37 +379,24 @@ tailwind.config = {
       </h2>
     </div>
 
-    <!-- Sección ALIMENTACIÓN -->
     <div class="space-y-2.5">
       <h3 class="text-xs font-black text-[#7A6E60] uppercase tracking-wider">Alimentación Diaria</h3>
-      
       <div class="bg-white border border-sand-200 rounded-2xl p-3.5 shadow-sm space-y-2">
         <div class="flex justify-between items-center text-xs font-bold text-[#2C2621]">
-          <span>Pollo hervido con arroz blanco (suave)</span>
+          <span>Pollo hervido + arroz blanco suave</span>
           <span class="text-olive-700">Comida blanda</span>
         </div>
         <div class="w-full bg-sand-100 h-2 rounded-full overflow-hidden border border-sand-200">
           <div class="bg-olive-600 h-full w-[80%] rounded-full"></div>
         </div>
-        <p class="text-[10px] text-[#7A6E60]">Sin sal, sin ajo, sin cebolla. Dividir en 3-4 porciones pequeñas.</p>
-      </div>
-
-      <div class="bg-white border border-sand-200 rounded-2xl p-3.5 shadow-sm space-y-2">
-        <div class="flex justify-between items-center text-xs font-bold text-[#2C2621]">
-          <span>Caldo de pollo desgrasado</span>
-          <span class="text-olive-700">Hidratación oral</span>
-        </div>
-        <div class="w-full bg-sand-100 h-2 rounded-full overflow-hidden border border-sand-200">
-          <div class="bg-olive-600 h-full w-[65%] rounded-full"></div>
-        </div>
+        <p class="text-[10px] text-[#7A6E60]">Sin sal, sin ajo, sin cebolla. Dividir en raciones pequeñas.</p>
       </div>
     </div>
 
-    <!-- Sección BIENESTAR (Estilo Screenshot 5) -->
     <div class="space-y-2.5 pt-2">
       <h3 class="text-xs font-black text-[#7A6E60] uppercase tracking-wider">Bienestar y Signos</h3>
 
-      <!-- Suero Subcutáneo Barra -->
+      <!-- Barra Suero -->
       <div class="bg-white border border-sand-200 rounded-2xl p-3.5 shadow-sm space-y-2">
         <div class="flex justify-between items-center">
           <span class="text-xs font-bold text-[#2C2621] flex items-center gap-1.5">
@@ -484,189 +407,155 @@ tailwind.config = {
         <div class="w-full bg-sand-100 h-2.5 rounded-full overflow-hidden border border-sand-200">
           <div id="sueroProgressBar" class="bg-cyan-600 h-full w-0 transition-all duration-500 rounded-full"></div>
         </div>
-        <p class="text-[10px] text-[#7A6E60]">Meta: 6 tomas de 20 cc cada 4 horas.</p>
       </div>
 
-      <!-- Apetito Selector -->
-      <div class="bg-white border border-sand-200 rounded-2xl p-3 shadow-sm flex items-center justify-between">
-        <span class="text-xs font-bold text-[#2C2621] flex items-center gap-1.5">
-          <i class="ph-bold ph-bowl-food text-amber-600"></i> Apetito
-        </span>
-        <select id="logAppetite" onchange="saveClinicalLogDraft()" class="bg-sand-100 border border-sand-200 rounded-xl px-2.5 py-1 text-xs text-[#2C2621] font-semibold focus:outline-none">
-          <option value="5">⭐⭐⭐⭐⭐ Excelente</option>
-          <option value="4">⭐⭐⭐⭐ Bueno</option>
-          <option value="3" selected>⭐⭐⭐ Regular / Asistido</option>
-          <option value="2">⭐⭐ Bajo / Desgana</option>
-          <option value="1">⭐ Nulo (No come)</option>
-        </select>
-      </div>
+      <!-- Selectores de Bienestar -->
+      <div class="grid grid-cols-2 gap-2">
+        <div class="bg-white border border-sand-200 rounded-2xl p-3 shadow-sm">
+          <span class="text-[10px] font-bold text-[#7A6E60] uppercase block mb-1">Apetito</span>
+          <select id="logAppetite" onchange="saveClinicalLogDraft()" class="w-full bg-sand-100 border border-sand-200 rounded-xl px-2 py-1 text-xs text-[#2C2621] font-semibold focus:outline-none">
+            <option value="5">⭐⭐⭐⭐⭐ Excelente</option>
+            <option value="4">⭐⭐⭐⭐ Bueno</option>
+            <option value="3" selected>⭐⭐⭐ Regular</option>
+            <option value="2">⭐⭐ Bajo</option>
+            <option value="1">⭐ Nulo</option>
+          </select>
+        </div>
 
-      <!-- Estado de Turgencia / Deshidratación -->
-      <div class="bg-white border border-sand-200 rounded-2xl p-3 shadow-sm flex items-center justify-between">
-        <span class="text-xs font-bold text-[#2C2621] flex items-center gap-1.5">
-          <i class="ph-bold ph-hand-fist text-olive-600"></i> Pliegue Cutáneo
-        </span>
-        <select id="logHydration" onchange="saveClinicalLogDraft()" class="bg-sand-100 border border-sand-200 rounded-xl px-2.5 py-1 text-xs text-[#2C2621] font-semibold focus:outline-none">
-          <option value="Normal">Normal (&lt; 2 seg)</option>
-          <option value="Leve deshidratación">Leve (2 a 3 seg)</option>
-          <option value="Alerta Deshidratado">Alerta (&gt; 3 seg)</option>
-        </select>
-      </div>
-
-      <!-- Estado de Ánimo -->
-      <div class="bg-white border border-sand-200 rounded-2xl p-3 shadow-sm flex items-center justify-between">
-        <span class="text-xs font-bold text-[#2C2621] flex items-center gap-1.5">
-          <i class="ph-bold ph-smiley text-purple-600"></i> Ánimo / Energía
-        </span>
-        <select id="logEnergy" onchange="saveClinicalLogDraft()" class="bg-sand-100 border border-sand-200 rounded-xl px-2.5 py-1 text-xs text-[#2C2621] font-semibold focus:outline-none">
-          <option value="Activo">Activo / Alerta</option>
-          <option value="Tranquilo">Tranquilo / Descansando</option>
-          <option value="Decaído" selected>Decaído / Somnoliento</option>
-          <option value="Muy débil">Muy débil</option>
-        </select>
+        <div class="bg-white border border-sand-200 rounded-2xl p-3 shadow-sm">
+          <span class="text-[10px] font-bold text-[#7A6E60] uppercase block mb-1">Ánimo</span>
+          <select id="logEnergy" onchange="saveClinicalLogDraft()" class="w-full bg-sand-100 border border-sand-200 rounded-xl px-2 py-1 text-xs text-[#2C2621] font-semibold focus:outline-none">
+            <option value="Activo">Activo</option>
+            <option value="Tranquilo">Tranquilo</option>
+            <option value="Decaído" selected>Decaído</option>
+            <option value="Muy débil">Muy débil</option>
+          </select>
+        </div>
       </div>
     </div>
   </main>
 
   <!-- ============================================================================== -->
-  <!-- VISTA 6: ASISTENTE IA VETERINARIO -->
+  <!-- VISTA 6: BOTVET (SOLO PREGUNTAS ASISTIDAS BASADAS EN LA BASE DE DATOS) -->
   <!-- ============================================================================== -->
   <main id="view-ia" class="app-view hidden space-y-3">
     <div class="flex items-center justify-between">
       <h2 class="text-lg font-black tracking-wider text-[#2C2621] uppercase flex items-center gap-1.5">
-        IA Sultán Vet <i class="ph-bold ph-sparkle text-olive-600"></i>
+        BotVET Sultán <i class="ph-bold ph-sparkle text-olive-600"></i>
       </h2>
-      <a href="tel:04169957400" class="text-[10px] font-bold text-olive-700 bg-olive-100 border border-olive-200 px-2.5 py-1 rounded-full flex items-center gap-1">
-        <i class="ph-bold ph-phone"></i> Dr. Marcano
-      </a>
+      <span class="text-[10px] font-bold text-olive-700 bg-olive-100 border border-olive-200 px-2 py-0.5 rounded-full">Preguntas Guiadas</span>
     </div>
 
-    <div class="bg-white border border-sand-200 rounded-[28px] p-4 shadow-sm flex flex-col h-[520px]">
-      <!-- Quick chips -->
-      <div class="pb-3 flex gap-1.5 overflow-x-auto no-scrollbar border-b border-sand-200">
-        <button onclick="askPreset('🚨 Sultán vomitó la dosis de medicamento. ¿Qué debo hacer?')" class="text-[10px] whitespace-nowrap bg-sand-100 hover:bg-sand-200 text-[#5C4F3D] px-2.5 py-1.5 rounded-lg font-semibold transition">
-          ¿Vomitó la dosis?
-        </button>
-        <button onclick="askPreset('💧 ¿Cómo realizo la prueba del pliegue cutáneo para evaluar su hidratación?')" class="text-[10px] whitespace-nowrap bg-sand-100 hover:bg-sand-200 text-[#5C4F3D] px-2.5 py-1.5 rounded-lg font-semibold transition">
-          ¿Deshidratado?
-        </button>
-        <button onclick="askPreset('💉 ¿Cómo inyecto los 20cc de suero subcutáneo correctamente en la nuca?')" class="text-[10px] whitespace-nowrap bg-sand-100 hover:bg-sand-200 text-[#5C4F3D] px-2.5 py-1.5 rounded-lg font-semibold transition">
-          Técnica suero
-        </button>
+    <div class="bg-white border border-sand-200 rounded-[28px] p-4 shadow-sm flex flex-col h-[540px]">
+      
+      <!-- Selector de Preguntas Asistidas (Sin escribir a mano) -->
+      <div class="pb-3 border-b border-sand-200 space-y-2">
+        <span class="text-[10px] font-black text-[#7A6E60] uppercase tracking-wider block">Toca una pregunta asistida:</span>
+        <div class="grid grid-cols-1 gap-1.5">
+          <button onclick="handleBotAction('next_dose')" class="text-left bg-olive-50 hover:bg-olive-100 border border-olive-200 text-olive-800 text-[11px] font-bold py-2 px-3 rounded-xl transition flex items-center justify-between">
+            <span>⏰ ¿Qué fármaco le toca ahora y para qué sirve?</span>
+            <i class="ph-bold ph-arrow-right text-xs"></i>
+          </button>
+          <button onclick="handleBotAction('all_meds')" class="text-left bg-sand-100 hover:bg-sand-200 border border-sand-200 text-[#5C4F3D] text-[11px] font-bold py-2 px-3 rounded-xl transition flex items-center justify-between">
+            <span>💊 Ver lista de todos los fármacos de la base de datos</span>
+            <i class="ph-bold ph-arrow-right text-xs"></i>
+          </button>
+          <button onclick="handleBotAction('hydration')" class="text-left bg-sand-100 hover:bg-sand-200 border border-sand-200 text-[#5C4F3D] text-[11px] font-bold py-2 px-3 rounded-xl transition flex items-center justify-between">
+            <span>💧 ¿Cómo evaluar si Sultán está deshidratado?</span>
+            <i class="ph-bold ph-arrow-right text-xs"></i>
+          </button>
+          <button onclick="handleBotAction('vomit')" class="text-left bg-sand-100 hover:bg-sand-200 border border-sand-200 text-[#5C4F3D] text-[11px] font-bold py-2 px-3 rounded-xl transition flex items-center justify-between">
+            <span>🚨 ¿Qué hacer si vomitó la dosis de medicamento?</span>
+            <i class="ph-bold ph-arrow-right text-xs"></i>
+          </button>
+          <button onclick="handleBotAction('whatsapp_report')" class="text-left bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-800 text-[11px] font-bold py-2 px-3 rounded-xl transition flex items-center justify-between">
+            <span>📲 Generar y Enviar Reporte a mi WhatsApp (0412-3504829)</span>
+            <i class="ph-bold ph-whatsapp-logo text-xs"></i>
+          </button>
+        </div>
       </div>
 
-      <!-- Messages box -->
+      <!-- Historial de Respuestas del BotVET -->
       <div id="aiChatMessages" class="flex-1 overflow-y-auto space-y-3 py-3 pr-1 text-xs">
         <div class="flex items-start gap-2">
           <div class="w-7 h-7 rounded-xl bg-olive-100 text-olive-700 flex items-center justify-center shrink-0 text-sm mt-0.5">
             <i class="ph-bold ph-sparkle"></i>
           </div>
-          <div class="bg-[#FAF7F2] border border-sand-200 rounded-2xl p-3 max-w-[88%] text-[#2C2621] leading-relaxed">
-            <strong class="block text-olive-700 mb-0.5">¡Hola! Soy la IA de asistencia para Sultán 🐾</strong>
-            Conozco el protocolo de 21 días (Doxiciclina, Metrifol, Pentaviral, Omeprazol y Suero Subcutáneo). Pregúntame dudas de horarios, administración o síntomas.
+          <div class="bg-[#FAF7F2] border border-sand-200 rounded-2xl p-3 max-w-[90%] text-[#2C2621] leading-relaxed">
+            <strong class="block text-olive-700 mb-1">¡Hola! Soy BotVET Sultán 🐾</strong>
+            Estoy conectado a tu base de datos de Supabase. Toca cualquiera de las opciones de arriba para ver qué medicamento le toca, para qué sirve cada uno o enviar el reporte a tu WhatsApp.
           </div>
         </div>
       </div>
 
-      <!-- Input box -->
-      <form onsubmit="handleSendAiMessage(event)" class="pt-2 border-t border-sand-200 flex items-center gap-2">
-        <input type="text" id="aiInputText" placeholder="Escribe tu consulta sobre Sultán..." class="flex-1 bg-sand-100 border border-sand-200 rounded-xl px-3 py-2.5 text-xs text-[#2C2621] focus:outline-none focus:border-olive-600">
-        <button type="submit" id="aiSendBtn" class="w-10 h-10 bg-olive-600 text-white rounded-xl flex items-center justify-center text-sm shadow-sm active:scale-95 transition">
-          <i class="ph-bold ph-paper-plane-right"></i>
-        </button>
-      </form>
     </div>
   </main>
 
 </div>
 
 <!-- ============================================================================== -->
-<!-- BOTTOM NAVIGATION BAR (Exactamente como las 5 pantallas del diseño) -->
+<!-- BOTTOM NAVIGATION BAR -->
 <!-- ============================================================================== -->
 <nav class="fixed bottom-0 inset-x-0 z-50 bg-[#FAF7F2]/95 border-t border-sand-200 backdrop-blur-md safe-bottom shadow-lg">
   <div class="max-w-md mx-auto grid grid-cols-6 py-2 px-1 text-center">
     
-    <!-- 1. Cronograma -->
     <button onclick="switchTab('cronograma')" id="nav-cronograma" class="nav-btn active flex flex-col items-center justify-center py-1 text-olive-700">
       <i class="ph-bold ph-clock text-xl mb-0.5"></i>
       <span class="text-[9px] font-bold">Horario</span>
     </button>
 
-    <!-- 2. Inventario -->
     <button onclick="switchTab('inventario')" id="nav-inventario" class="nav-btn flex flex-col items-center justify-center py-1 text-[#7A6E60]">
       <i class="ph-bold ph-pill text-xl mb-0.5"></i>
       <span class="text-[9px] font-bold">Fármacos</span>
     </button>
 
-    <!-- 3. Calendario -->
     <button onclick="switchTab('calendario')" id="nav-calendario" class="nav-btn flex flex-col items-center justify-center py-1 text-[#7A6E60]">
       <i class="ph-bold ph-calendar text-xl mb-0.5"></i>
       <span class="text-[9px] font-bold">21 Días</span>
     </button>
 
-    <!-- 4. Perfil -->
     <button onclick="switchTab('perfil')" id="nav-perfil" class="nav-btn flex flex-col items-center justify-center py-1 text-[#7A6E60]">
       <i class="ph-bold ph-dog text-xl mb-0.5"></i>
       <span class="text-[9px] font-bold">Perfil</span>
     </button>
 
-    <!-- 5. Comida y Rutina -->
     <button onclick="switchTab('comida')" id="nav-comida" class="nav-btn flex flex-col items-center justify-center py-1 text-[#7A6E60]">
       <i class="ph-bold ph-bowl-food text-xl mb-0.5"></i>
       <span class="text-[9px] font-bold">Rutina</span>
     </button>
 
-    <!-- 6. IA -->
     <button onclick="switchTab('ia')" id="nav-ia" class="nav-btn flex flex-col items-center justify-center py-1 text-[#7A6E60]">
       <i class="ph-bold ph-sparkle text-xl mb-0.5 text-amber-600"></i>
-      <span class="text-[9px] font-bold">IA Vet</span>
+      <span class="text-[9px] font-bold">BotVET</span>
     </button>
 
   </div>
 </nav>
 
 <!-- ============================================================================== -->
-<!-- JAVASCRIPT: LOGICA, SUPABASE & ASISTENTE IA -->
+<!-- JAVASCRIPT: LOGICA, SUPABASE CRUD & ALARMAS REALES -->
 <!-- ============================================================================== -->
 <script>
-/* ============ CRONOGRAMA OFICIAL ============ */
-const SCHEDULE = [
-  { id:'sue-5', time:'00:00', name:'Suero Subcutáneo #5', dose:'20 cc', detail:'Hidratación subcutánea', type:'syringe', cc:20 },
-  { id:'sue-6', time:'04:00', name:'Suero Subcutáneo #6', dose:'20 cc', detail:'Hidratación subcutánea', type:'syringe', cc:20 },
-  { id:'ome',   time:'08:00', name:'Omeprazol',           dose:'1 tableta', detail:'En ayunas · Protector', type:'pill', cc:0 },
-  { id:'sue-1', time:'08:00', name:'Suero Subcutáneo #1', dose:'20 cc', detail:'Hidratación subcutánea', type:'syringe', cc:20 },
-  { id:'dox',   time:'09:00', name:'Doxiciclina 100mg',   dose:'2 cc', detail:'Antibiótico · con comida', type:'liquid', cc:0 },
-  { id:'met',   time:'10:00', name:'Metrifol',            dose:'2 cc', detail:'Suplemento · con comida', type:'liquid', cc:0 },
-  { id:'pent',  time:'10:00', name:'Pentaviral',          dose:'5 cc', detail:'Inmunomodulador · 24h', type:'liquid', cc:0 },
-  { id:'sue-2', time:'12:00', name:'Suero Subcutáneo #2', dose:'20 cc', detail:'Hidratación subcutánea', type:'syringe', cc:20 },
-  { id:'sue-3', time:'16:00', name:'Suero Subcutáneo #3', dose:'20 cc', detail:'Hidratación subcutánea', type:'syringe', cc:20 },
-  { id:'sue-4', time:'20:00', name:'Suero Subcutáneo #4', dose:'20 cc', detail:'Hidratación subcutánea', type:'syringe', cc:20 },
-];
+const USER_WHATSAPP = '584123504829'; // Número del usuario: 04123504829
 
-/* ============ ESTADO PRINCIPAL & CONFIGURACIÓN SUPABASE ============ */
-const STORAGE_KEY = 'sultan-treatment-v5';
-
-// Credenciales directas de Supabase (Proyecto SIGNE, tablas sultan_)
 const SUPABASE_CONFIG = {
   url: 'https://glbxqcbcjudzxxqawbhg.supabase.co',
   anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdsYnhxY2JjanVkenh4cWF3YmhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4Nzc3NjUsImV4cCI6MjA5MzQ1Mzc2NX0.2VW5APQcbGKpFYfqF0-6LMN5Xmu5qoAqVwV5a4Pq0Lg'
 };
 
+const STORAGE_KEY = 'sultan-treatment-v6';
+
 let state = {
   startDate: localDateKey(new Date()),
+  medications: [], // Cargados de Supabase
   checksByDate: {},
   completedDays: {},
   firedToday: { date:'', ids:{} },
   snooze: null,
   notificationsEnabled: false,
-  soundEnabled: true,
   muted: false,
   userName: 'Jesús',
-  clinicalDraft: {
-    appetite: '3',
-    hydration: 'Normal',
-    energy: 'Decaído'
-  }
+  clinicalDraft: { appetite: '3', energy: 'Decaído' }
 };
 
 let supabaseClient = null;
@@ -689,7 +578,7 @@ function localDateKey(d=new Date()){
   const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
   return `${y}-${m}-${day}`;
 }
-function parseTime(s){ const[h,m]=s.split(':').map(Number); return h*60+m; }
+function parseTime(s){ if(!s) return 0; const[h,m]=s.split(':').map(Number); return h*60+m; }
 function minutesOfDay(d=new Date()){ return d.getHours()*60+d.getMinutes(); }
 function pad(n){ return String(n).padStart(2,'0'); }
 function formatTime12(d){
@@ -709,7 +598,7 @@ function dayNumber(){
   return Math.max(1, Math.min(21, Math.floor((now-start)/86400000)+1));
 }
 
-/* ============ AUDIO Y ALARMA ============ */
+/* ============ AUDIO POTENTE Y ALARMAS REALES ============ */
 let audioCtx = null;
 function ensureAudio(){
   if(!audioCtx){
@@ -718,7 +607,8 @@ function ensureAudio(){
   if(audioCtx.state==='suspended') audioCtx.resume().catch(()=>{});
   return audioCtx;
 }
-function beep(freq, dur, vol=.35, type='sine', when=0){
+
+function beep(freq, dur, vol=.5, type='sine', when=0){
   const ctx = ensureAudio(); if(!ctx) return;
   const o = ctx.createOscillator(), g = ctx.createGain();
   o.connect(g); g.connect(ctx.destination);
@@ -729,14 +619,16 @@ function beep(freq, dur, vol=.35, type='sine', when=0){
   g.gain.linearRampToValueAtTime(0, t0 + dur);
   o.start(t0); o.stop(t0 + dur + .05);
 }
+
 function playAlarmPattern(){
   if(state.muted) return;
-  beep(880,.18,.4,'sine',0);
-  beep(1100,.18,.4,'sine',.25);
-  beep(880,.18,.4,'sine',.5);
-  beep(1100,.22,.4,'sine',.75);
-  beep(1320,.35,.45,'triangle',1.05);
+  beep(880,.18,.5,'sine',0);
+  beep(1100,.18,.5,'sine',.22);
+  beep(880,.18,.5,'sine',.44);
+  beep(1100,.22,.55,'sine',.66);
+  beep(1320,.35,.6,'triangle',.92);
 }
+
 document.addEventListener('touchstart',()=>ensureAudio(),{once:true,passive:true});
 document.addEventListener('click',()=>ensureAudio(),{once:true});
 
@@ -748,28 +640,45 @@ function triggerAlarm(dose){
   currentAlarm = dose; ringingStart = Date.now();
   const modal = document.getElementById('alarmModal');
   document.getElementById('modalDoseName').textContent = dose.name;
-  document.getElementById('modalDoseTime').textContent = formatHM(timeToDate(dose.time));
-  document.getElementById('modalDoseDetail').textContent = `${dose.dose} · ${dose.detail}`;
+  document.getElementById('modalDoseTime').textContent = formatHM(timeToDate(dose.scheduled_time || dose.time));
+  document.getElementById('modalDoseDetail').textContent = `${dose.dose} · ${dose.detail || ''}`;
   modal.classList.remove('hidden'); modal.classList.add('flex');
+  
   playAlarmPattern();
   ringInterval = setInterval(()=>{
     playAlarmPattern();
-    if(navigator.vibrate) navigator.vibrate([300,150,300,150,500]);
+    if(navigator.vibrate) navigator.vibrate([400, 200, 400, 200, 600]);
     const sec = Math.floor((Date.now()-ringingStart)/1000);
     const el = document.getElementById('modalRingingTime');
     if(el) el.textContent = `🔔 Sonando desde hace ${sec}s`;
-  }, 2800);
-  if(navigator.vibrate) navigator.vibrate([400,200,400,200,600]);
-  if('Notification' in window && Notification.permission==='granted' && document.hidden){
-    try{
-      const n = new Notification('💊 Sultán: Hora de '+dose.name,{
-        body:`${dose.dose} · ${dose.detail}`, tag:'dose-'+dose.id,
-        requireInteraction:true, silent:false
-      });
-      n.onclick = ()=>{ window.focus(); n.close(); };
-    }catch(e){}
+  }, 2600);
+
+  if(navigator.vibrate) navigator.vibrate([500, 250, 500, 250, 500]);
+
+  // Notificación real en el teléfono
+  sendDeviceNotification('⏰ Sultán: Hora de ' + dose.name, `${dose.dose} - ${dose.detail || 'Hora de la toma'}`);
+}
+
+function sendDeviceNotification(title, body){
+  if('Notification' in window && Notification.permission === 'granted'){
+    try {
+      if('serviceWorker' in navigator && navigator.serviceWorker.controller){
+        navigator.serviceWorker.ready.then(reg => {
+          reg.showNotification(title, {
+            body: body,
+            icon: '/favicon.ico',
+            vibrate: [300, 150, 300, 150, 500],
+            requireInteraction: true,
+            tag: 'sultan-dose'
+          });
+        });
+      } else {
+        new Notification(title, { body: body, requireInteraction: true });
+      }
+    } catch(e){}
   }
 }
+
 function closeAlarm(){
   const modal = document.getElementById('alarmModal');
   modal.classList.add('hidden'); modal.classList.remove('flex');
@@ -777,12 +686,14 @@ function closeAlarm(){
   if(navigator.vibrate) navigator.vibrate(0);
   currentAlarm = null;
 }
+
 function confirmCurrentAlarm(){
   if(!currentAlarm) return;
   markDose(currentAlarm.id, true);
   closeAlarm();
   setTimeout(checkAlarms, 1500);
 }
+
 function snoozeAlarm(min=10){
   if(!currentAlarm) return;
   const id = currentAlarm.id;
@@ -795,14 +706,16 @@ function checkAlarms(){
   const now = new Date();
   const todayKey = localDateKey(now);
   const nowMin = minutesOfDay(now);
+
   if(state.firedToday.date !== todayKey){
     state.firedToday = { date:todayKey, ids:{} };
     state.snooze = null; saveState();
     renderTimeline(); renderCalendar(); updateStats();
   }
+
   if(state.snooze){
     if(Date.now() >= state.snooze.until){
-      const dose = SCHEDULE.find(d=>d.id===state.snooze.doseId);
+      const dose = state.medications.find(d=>d.id===state.snooze.doseId);
       state.snooze = null; saveState();
       if(dose && !isChecked(todayKey,dose.id) && !currentAlarm){
         triggerAlarm(dose);
@@ -811,12 +724,13 @@ function checkAlarms(){
     }
     return;
   }
+
   if(currentAlarm) return;
   let best=null, bestDiff=Infinity;
-  for(const dose of SCHEDULE){
+  for(const dose of state.medications){
     if(state.firedToday.ids[dose.id]) continue;
     if(isChecked(todayKey,dose.id)) continue;
-    const diff = nowMin - parseTime(dose.time);
+    const diff = nowMin - parseTime(dose.scheduled_time || dose.time);
     if(diff>=0 && diff<=120 && diff<bestDiff){ best=dose; bestDiff=diff; }
   }
   if(best){
@@ -825,45 +739,42 @@ function checkAlarms(){
   }
 }
 
-/* ============ MANEJO DE TOMAS (CHECKS) ============ */
-function isChecked(dk, id){
-  return !!(state.checksByDate[dk] && state.checksByDate[dk][id]);
-}
-function getDoseMeta(dk, id){
-  return state.checksByDate[dk]?.[id] || null;
-}
+/* ============ CHECKS Y PROGRESIÓN AUTOMÁTICA ============ */
+function isChecked(dk, id){ return !!(state.checksByDate[dk] && state.checksByDate[dk][id]); }
+function getDoseMeta(dk, id){ return state.checksByDate[dk]?.[id] || null; }
 
 async function markDose(id, checked=true){
   const dk = localDateKey();
   if(!state.checksByDate[dk]) state.checksByDate[dk] = {};
-  
+
   if(checked){
-    state.checksByDate[dk][id] = {
-      takenAt: new Date().toISOString(),
-      by: state.userName || 'Familiar'
-    };
+    state.checksByDate[dk][id] = { takenAt: new Date().toISOString(), by: state.userName || 'Familiar' };
   } else {
     delete state.checksByDate[dk][id];
   }
 
-  const all = SCHEDULE.every(d=>state.checksByDate[dk][d.id]);
-  if(all) state.completedDays[dk]=true; else delete state.completedDays[dk];
+  // Comprobar si se completaron todos los fármacos de hoy para GUARDAR AUTOMÁTICAMENTE EL DÍA
+  const allCompleted = state.medications.length > 0 && state.medications.every(d => isChecked(dk, d.id));
+  if(allCompleted){
+    state.completedDays[dk] = true;
+  } else {
+    delete state.completedDays[dk];
+  }
 
   saveState();
   renderTimeline();
   renderCalendar();
   updateStats();
 
-  // Sincronizar en Supabase
   if(supabaseClient){
     try {
-      const dose = SCHEDULE.find(d=>d.id===id);
+      const dose = state.medications.find(d=>d.id===id);
       if(checked){
         await supabaseClient.from('sultan_dose_logs').upsert({
           dose_id: id,
           dose_name: dose ? dose.name : id,
           log_date: dk,
-          scheduled_time: dose ? dose.time : '00:00',
+          scheduled_time: dose ? (dose.scheduled_time || dose.time) : '00:00',
           administered_by: state.userName || 'Familiar',
           taken_at: new Date().toISOString()
         }, { onConflict: 'dose_id, log_date' });
@@ -871,7 +782,8 @@ async function markDose(id, checked=true){
         await supabaseClient.from('sultan_dose_logs').delete().match({ dose_id: id, log_date: dk });
       }
 
-      if(all){
+      // Guardar automáticamente el día en Supabase
+      if(allCompleted){
         await supabaseClient.from('sultan_completed_days').upsert({
           day_date: dk,
           day_number: dayNumber()
@@ -897,24 +809,121 @@ function resetToday(){
     supabaseClient.from('sultan_dose_logs').delete().eq('log_date', dk).then(()=>{});
     supabaseClient.from('sultan_completed_days').delete().eq('day_date', dk).then(()=>{});
   }
-
   renderTimeline(); renderCalendar(); updateStats();
 }
 
-/* ============ RENDER CRONOGRAMA (VERTICAL TIMELINE ESTILO SCREENSHOT 2) ============ */
+/* ============ CRUD FÁRMACOS (AGREGAR, EDITAR, ELIMINAR) ============ */
+function openAddMedModal(){
+  document.getElementById('medModalTitle').innerHTML = '<i class="ph-bold ph-plus-circle text-olive-600"></i> Nuevo Fármaco';
+  document.getElementById('medFormId').value = '';
+  document.getElementById('medFormName').value = '';
+  document.getElementById('medFormDose').value = '';
+  document.getElementById('medFormTime').value = '12:00';
+  document.getElementById('medFormType').value = 'pill';
+  document.getElementById('medFormDetail').value = '';
+  document.getElementById('medModal').classList.remove('hidden');
+  document.getElementById('medModal').classList.add('flex');
+}
+
+function openEditMedModal(id){
+  const med = state.medications.find(m => m.id === id);
+  if(!med) return;
+  document.getElementById('medModalTitle').innerHTML = '<i class="ph-bold ph-pencil-simple text-olive-600"></i> Editar Fármaco';
+  document.getElementById('medFormId').value = med.id;
+  document.getElementById('medFormName').value = med.name;
+  document.getElementById('medFormDose').value = med.dose;
+  document.getElementById('medFormTime').value = med.scheduled_time || med.time || '08:00';
+  document.getElementById('medFormType').value = med.med_type || med.type || 'pill';
+  document.getElementById('medFormDetail').value = med.detail || '';
+  document.getElementById('medModal').classList.remove('hidden');
+  document.getElementById('medModal').classList.add('flex');
+}
+
+function closeMedModal(){
+  document.getElementById('medModal').classList.add('hidden');
+  document.getElementById('medModal').classList.remove('flex');
+}
+
+async function handleSaveMedication(e){
+  e.preventDefault();
+  const id = document.getElementById('medFormId').value || ('med-' + Date.now());
+  const name = document.getElementById('medFormName').value.trim();
+  const dose = document.getElementById('medFormDose').value.trim();
+  const time = document.getElementById('medFormTime').value.trim();
+  const type = document.getElementById('medFormType').value;
+  const detail = document.getElementById('medFormDetail').value.trim();
+
+  const medObj = {
+    id: id,
+    name: name,
+    dose: dose,
+    scheduled_time: time,
+    med_type: type,
+    detail: detail,
+    is_active: true
+  };
+
+  const existingIdx = state.medications.findIndex(m => m.id === id);
+  if(existingIdx >= 0){
+    state.medications[existingIdx] = medObj;
+  } else {
+    state.medications.push(medObj);
+  }
+
+  // Ordenar por hora
+  state.medications.sort((a,b) => parseTime(a.scheduled_time || a.time) - parseTime(b.scheduled_time || b.time));
+  saveState();
+  closeMedModal();
+  renderTimeline();
+  renderMedsList();
+  updateStats();
+
+  if(supabaseClient){
+    try {
+      await supabaseClient.from('sultan_medications').upsert(medObj);
+    } catch(err){
+      console.warn('Error guardando medicamento en Supabase:', err);
+    }
+  }
+}
+
+async function deleteMedication(id, name){
+  if(!confirm(`¿Eliminar ${name} del tratamiento?`)) return;
+  state.medications = state.medications.filter(m => m.id !== id);
+  saveState();
+  renderTimeline();
+  renderMedsList();
+  updateStats();
+
+  if(supabaseClient){
+    try {
+      await supabaseClient.from('sultan_medications').delete().eq('id', id);
+    } catch(err){
+      console.warn('Error eliminando en Supabase:', err);
+    }
+  }
+}
+
+/* ============ RENDER CRONOGRAMA ============ */
 function renderTimeline(){
   const c = document.getElementById('timelineContainer'); if(!c) return;
   const dk = localDateKey();
   const nowMin = minutesOfDay();
 
-  c.innerHTML = SCHEDULE.map(dose => {
+  if(state.medications.length === 0){
+    c.innerHTML = '<div class="text-center py-8 text-xs text-[#7A6E60]">No hay fármacos configurados. Agrega uno en la pestaña Fármacos.</div>';
+    return;
+  }
+
+  c.innerHTML = state.medications.map(dose => {
     const meta = getDoseMeta(dk, dose.id);
     const checked = !!meta;
-    const dm = parseTime(dose.time);
+    const timeStr = dose.scheduled_time || dose.time;
+    const dm = parseTime(timeStr);
     const isPast = dm < nowMin;
     const isLate = isPast && !checked;
 
-    let subText = `${dose.dose} · ${dose.detail}`;
+    let subText = `${dose.dose} · ${dose.detail || ''}`;
     if(checked && meta && typeof meta === 'object' && meta.takenAt){
       const takenTime = formatHM(new Date(meta.takenAt));
       subText = `Administrado a las ${takenTime} por ${meta.by || 'Familiar'}`;
@@ -922,17 +931,14 @@ function renderTimeline(){
 
     return `
       <div class="flex items-start gap-4">
-        <!-- Hora al costado izquierdo como el screenshot -->
         <div class="w-14 text-right pt-2 shrink-0">
-          <span class="text-xs font-mono font-black ${isLate ? 'text-amber-700' : 'text-[#2C2621]'} block leading-none">${dose.time}</span>
-          <span class="text-[9px] font-bold text-[#7A6E60]">${parseInt(dose.time) >= 12 ? 'PM' : 'AM'}</span>
+          <span class="text-xs font-mono font-black ${isLate ? 'text-amber-700' : 'text-[#2C2621]'} block leading-none">${timeStr}</span>
+          <span class="text-[9px] font-bold text-[#7A6E60]">${parseInt(timeStr) >= 12 ? 'PM' : 'AM'}</span>
         </div>
 
-        <!-- Tarjeta tipo Screenshot 2 con Avatar del Perro y Botón Administrado -->
         <div class="flex-1 bg-white border ${checked ? 'border-olive-200 bg-olive-50/40' : isLate ? 'border-amber-300' : 'border-sand-200'} rounded-[24px] p-3 sm:p-4 shadow-sm flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           
           <div class="flex items-center gap-3">
-            <!-- Avatar perro enmarcado -->
             <div class="w-11 h-11 rounded-2xl bg-[#C7DCA7] border-2 border-[#4E6E38] p-1 flex items-center justify-center shrink-0 text-xl text-[#3D572B] shadow-inner">
               <i class="ph-fill ph-dog"></i>
             </div>
@@ -945,7 +951,6 @@ function renderTimeline(){
             </div>
           </div>
 
-          <!-- Botón Verde Estilo Screenshot: "✓ Administrado" -->
           <button onclick="markDose('${dose.id}', ${!checked})"
                   class="px-4 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 ${
                     checked 
@@ -955,14 +960,45 @@ function renderTimeline(){
             <i class="ph-bold ${checked ? 'ph-check-bold' : 'ph-circle'} text-base"></i>
             <span>${checked ? 'Administrado' : 'Administrar'}</span>
           </button>
-
         </div>
       </div>
     `;
   }).join('');
 }
 
-/* ============ RENDER CALENDARIO (ESTILO SCREENSHOT 3) ============ */
+/* ============ RENDER INVENTARIO (LISTA CON CRUD) ============ */
+function renderMedsList(){
+  const c = document.getElementById('medsListContainer'); if(!c) return;
+
+  c.innerHTML = state.medications.map(med => {
+    const timeStr = med.scheduled_time || med.time;
+    return `
+      <div class="bg-white border border-sand-200 rounded-2xl p-4 shadow-sm flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-11 h-11 rounded-xl bg-olive-50 border border-olive-100 flex items-center justify-center text-olive-600 text-xl shrink-0">
+            <i class="ph-bold ${med.med_type === 'syringe' ? 'ph-syringe' : med.med_type === 'liquid' ? 'ph-flask' : 'ph-capsule'}"></i>
+          </div>
+          <div class="min-w-0">
+            <h4 class="font-extrabold text-sm text-[#2C2621] truncate">${med.name}</h4>
+            <p class="text-[11px] text-[#7A6E60] font-semibold">${med.dose} · ${timeStr}</p>
+            <p class="text-[10px] text-olive-700 truncate">${med.detail || ''}</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-1 shrink-0">
+          <button onclick="openEditMedModal('${med.id}')" class="w-8 h-8 rounded-lg bg-sand-100 hover:bg-sand-200 text-[#5C4F3D] flex items-center justify-center text-sm transition" title="Editar">
+            <i class="ph-bold ph-pencil-simple"></i>
+          </button>
+          <button onclick="deleteMedication('${med.id}', '${med.name}')" class="w-8 h-8 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 flex items-center justify-center text-sm transition" title="Eliminar">
+            <i class="ph-bold ph-trash"></i>
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+/* ============ RENDER CALENDARIO AUTOMÁTICO ============ */
 function renderCalendar(){
   const grid = document.getElementById('calendarGrid'); if(!grid) return;
   const start = new Date(state.startDate+'T00:00:00');
@@ -974,93 +1010,190 @@ function renderCalendar(){
     const d = new Date(start); d.setDate(d.getDate()+i);
     const dk = localDateKey(d);
     const isToday = dk === todayKey;
-    const isPast = d < today;
-    const isComplete = state.completedDays[dk] || (dk === todayKey && SCHEDULE.every(x=>isChecked(dk,x.id)));
+    const isComplete = state.completedDays[dk] || (dk === todayKey && state.medications.length > 0 && state.medications.every(x=>isChecked(dk,x.id)));
 
     let bgCls = 'bg-white border-sand-200 text-[#5C4F3D]';
     if(isComplete) bgCls = 'bg-[#4E6E38] border-[#3D572B] text-white shadow-sm';
     else if(isToday) bgCls = 'bg-[#C48243] border-[#7D5533] text-white font-black animate-pulse';
 
     html.push(`
-      <button onclick="toggleDay('${dk}')" class="aspect-square rounded-2xl border ${bgCls} flex flex-col items-center justify-center text-xs font-bold transition active:scale-95 relative">
+      <div class="aspect-square rounded-2xl border ${bgCls} flex flex-col items-center justify-center text-xs font-bold relative">
         <span class="text-[8px] opacity-70">D</span>
         <span class="text-sm leading-none font-black">${i+1}</span>
         ${isComplete ? '<span class="w-1.5 h-1.5 rounded-full bg-white absolute bottom-1"></span>' : ''}
-      </button>
+      </div>
     `);
   }
   grid.innerHTML = html.join('');
-  
   const inp = document.getElementById('startDateInput');
   if(inp && !inp.value) inp.value = state.startDate;
-}
-
-function toggleDay(dk){
-  if(state.completedDays[dk]) delete state.completedDays[dk];
-  else state.completedDays[dk]=true;
-  saveState(); renderCalendar(); updateStats();
-  if(supabaseClient){
-    if(state.completedDays[dk]){
-      supabaseClient.from('sultan_completed_days').upsert({ day_date: dk, day_number: dayNumber() }).then(()=>{});
-    } else {
-      supabaseClient.from('sultan_completed_days').delete().eq('day_date', dk).then(()=>{});
-    }
-  }
 }
 
 /* ============ ESTADÍSTICAS GLOBALES ============ */
 function updateStats(){
   const dk = localDateKey();
-  const checkedDoses = SCHEDULE.filter(d=>isChecked(dk,d.id));
+  const total = state.medications.length;
+  const checkedDoses = state.medications.filter(d => isChecked(dk, d.id));
   const checked = checkedDoses.length;
-  const total = SCHEDULE.length;
 
   const day = dayNumber();
   document.getElementById('hdrDayNumber').textContent = day;
 
-  // Tomas hoy
   const statText = document.getElementById('statProgressText');
   if(statText) statText.textContent = `${checked} de ${total} completadas`;
 
-  const percent = Math.round((checked / total) * 100);
+  const percent = total > 0 ? Math.round((checked / total) * 100) : 0;
   const pText = document.getElementById('statPercentText');
   if(pText) pText.textContent = `${percent}%`;
   const pBar = document.getElementById('statProgressBar');
   if(pBar) pBar.style.width = `${percent}%`;
 
-  // Suero subcutáneo (Meta: 120 cc)
-  const sueroCc = checkedDoses.filter(d=>d.type==='syringe').length * 20;
+  const sueroCc = checkedDoses.filter(d => (d.med_type === 'syringe' || d.type === 'syringe')).length * 20;
   const sueroLbl = document.getElementById('sueroProgressLabel');
   if(sueroLbl) sueroLbl.textContent = `${sueroCc} / 120 cc`;
   const sueroBar = document.getElementById('sueroProgressBar');
   if(sueroBar) sueroBar.style.width = `${Math.min(100, Math.round((sueroCc/120)*100))}%`;
 }
 
-/* ============ RELOJ / CONTADOR ============ */
 function updateClock(){
   const el = document.getElementById('liveClock');
   if(el) el.textContent = formatTime12(new Date());
 }
+
 function updateNextDose(){
   const now = new Date(), nowMin = minutesOfDay(now);
   let next=null;
-  for(const dose of SCHEDULE){
-    const dm = parseTime(dose.time);
-    if(dm > nowMin && (!next || dm < parseTime(next.time))) next = dose;
+  for(const dose of state.medications){
+    const dm = parseTime(dose.scheduled_time || dose.time);
+    if(dm > nowMin && (!next || dm < parseTime(next.scheduled_time || next.time))) next = dose;
   }
   let target;
-  if(next) target = timeToDate(next.time);
-  else {
-    next = SCHEDULE.reduce((a,b)=> parseTime(a.time) < parseTime(b.time) ? a : b);
-    target = timeToDate(next.time); target.setDate(target.getDate()+1);
+  if(next) target = timeToDate(next.scheduled_time || next.time);
+  else if(state.medications.length > 0) {
+    next = state.medications[0];
+    target = timeToDate(next.scheduled_time || next.time); target.setDate(target.getDate()+1);
   }
-  const diff = target - now;
-  const h = Math.floor(diff/3600000), m = Math.floor((diff%3600000)/60000);
   const el = document.getElementById('nextDoseCount');
-  if(el) el.textContent = `${pad(h)}h ${pad(m)}m (${next.name})`;
+  if(el && next && target){
+    const diff = target - now;
+    const h = Math.floor(diff/3600000), m = Math.floor((diff%3600000)/60000);
+    el.textContent = `${pad(h)}h ${pad(m)}m (${next.name})`;
+  }
 }
 
-/* ============ NAVEGACIÓN BOTTOM BAR (ESTILO APPS NATIVAS) ============ */
+/* ============ BOTVET CON PREGUNTAS ASISTIDAS DINÁMICAS ============ */
+function appendBotMessage(role, text){
+  const container = document.getElementById('aiChatMessages'); if(!container) return;
+  const isUser = role === 'user';
+  const div = document.createElement('div');
+  div.className = `flex items-start gap-2 ${isUser ? 'flex-row-reverse' : ''}`;
+  const iconBg = isUser ? 'bg-[#4E6E38] text-white' : 'bg-olive-100 text-olive-700';
+  const icon = isUser ? 'ph-user' : 'ph-sparkle';
+  const bubbleStyle = isUser
+    ? 'bg-[#4E6E38] text-white rounded-2xl p-3 max-w-[85%] text-xs'
+    : 'bg-[#FAF7F2] border border-sand-200 rounded-2xl p-3 max-w-[90%] text-[#2C2621] text-xs leading-relaxed';
+
+  div.innerHTML = `
+    <div class="w-6 h-6 rounded-lg ${iconBg} flex items-center justify-center shrink-0 text-xs mt-0.5">
+      <i class="ph-bold ${icon}"></i>
+    </div>
+    <div class="${bubbleStyle}">${text}</div>
+  `;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function handleBotAction(actionKey){
+  const dk = localDateKey();
+  const nowMin = minutesOfDay();
+
+  if(actionKey === 'next_dose'){
+    appendBotMessage('user', '¿Qué fármaco le toca ahora y para qué sirve?');
+    
+    // Buscar la próxima dosis no administrada
+    let nextPending = state.medications.find(m => !isChecked(dk, m.id) && parseTime(m.scheduled_time || m.time) >= nowMin);
+    if(!nextPending){
+      nextPending = state.medications.find(m => !isChecked(dk, m.id));
+    }
+
+    if(nextPending){
+      const timeStr = nextPending.scheduled_time || nextPending.time;
+      const resp = `👉 <strong>Próximo Fármaco:</strong> <strong>${nextPending.name}</strong> (${nextPending.dose})<br/>` +
+                   `⏰ <strong>Horario programado:</strong> ${timeStr}<br/>` +
+                   `📋 <strong>¿Para qué es?:</strong> ${nextPending.detail || 'Tratamiento indicado según protocolo'}.<br/><br/>` +
+                   `<em>Recuerda marcarlo como administrado una vez que se lo des a Sultán.</em>`;
+      appendBotMessage('assistant', resp);
+    } else {
+      appendBotMessage('assistant', '🎉 ¡Excelente! Sultán ya tiene todas las tomas programadas de hoy administradas.');
+    }
+  }
+
+  else if(actionKey === 'all_meds'){
+    appendBotMessage('user', 'Ver lista de fármacos registrados');
+    let resp = `📋 <strong>Fármacos activos en la base de datos (${state.medications.length}):</strong><br/><br/>`;
+    state.medications.forEach((m, idx) => {
+      const isDone = isChecked(dk, m.id);
+      resp += `${isDone ? '✅' : '⏳'} <strong>${m.scheduled_time || m.time} - ${m.name}</strong> (${m.dose})<br/>` +
+              `<span class="text-[#7A6E60]">${m.detail || 'Sin nota'}</span><br/><br/>`;
+    });
+    appendBotMessage('assistant', resp);
+  }
+
+  else if(actionKey === 'hydration'){
+    appendBotMessage('user', '¿Cómo evaluar si está deshidratado?');
+    const resp = `💧 <strong>Prueba del pliegue cutáneo en Sultán:</strong><br/>` +
+                 `1. Pellizca suavemente la piel del lomo o nuca y levántala.<br/>` +
+                 `2. Suéltala y cuenta los segundos:<br/>` +
+                 `• <strong>&lt; 2 segundos:</strong> Hidratación normal y turgente.<br/>` +
+                 `• <strong>2 a 3 segundos:</strong> Deshidratación leve.<br/>` +
+                 `• <strong>&gt; 3 segundos:</strong> Alerta de deshidratación marcada. Continúa el suero subcutáneo de 20cc cada 4 horas y ofrece agua o caldo desgrasado.`;
+    appendBotMessage('assistant', resp);
+  }
+
+  else if(actionKey === 'vomit'){
+    appendBotMessage('user', '¿Qué hacer si vomitó la dosis?');
+    const resp = `🚨 <strong>Manejo de vómito de medicamentos:</strong><br/>` +
+                 `• <strong>Si vomitó antes de 20 min:</strong> La dosis casi no se absorbió. Deja descansar el estómago 30 minutos y ofrece un bocado de pollo con la dosis.<br/>` +
+                 `• <strong>Si vomitó después de 45-60 min:</strong> El fármaco ya se absorbió en gran parte; no repitas la dosis completa.<br/>` +
+                 `• <strong>IMPORTANTE:</strong> La Doxiciclina irrita el estómago vacío. Dásela SIEMPRE con comida blanda. Si los vómitos son continuos, avisa de inmediato al Dr. Marcano.`;
+    appendBotMessage('assistant', resp);
+  }
+
+  else if(actionKey === 'whatsapp_report'){
+    appendBotMessage('user', 'Generar y enviar reporte por WhatsApp');
+    sendQuickWhatsAppReport();
+    appendBotMessage('assistant', `📲 ¡Reporte preparado y enviado a tu WhatsApp (*0412-3504829*)!`);
+  }
+}
+
+/* ============ REPORTE WHATSAPP AL NÚMERO DEL USUARIO ============ */
+function sendQuickWhatsAppReport(){
+  const dk = localDateKey();
+  const day = dayNumber();
+  const checked = state.medications.filter(d => isChecked(dk, d.id));
+  const sueroCc = checked.filter(d => (d.med_type === 'syringe' || d.type === 'syringe')).length * 20;
+  const draft = state.clinicalDraft || {};
+
+  let msg = `*REPORTE CLÍNICO DE SULTÁN* 🐾\n`;
+  msg += `📅 *Fecha:* ${dk} (Día ${day} de 21)\n`;
+  msg += `👤 *Responsable:* ${state.userName || 'Jesús'}\n\n`;
+
+  msg += `💊 *Tomas administradas hoy (${checked.length}/${state.medications.length}):*\n`;
+  state.medications.forEach(d => {
+    const isDone = isChecked(dk, d.id);
+    msg += `${isDone ? '✅' : '⏳'} ${d.scheduled_time || d.time} - ${d.name} (${d.dose})\n`;
+  });
+
+  msg += `\n💧 *Suero subcutáneo:* ${sueroCc} cc acumulados hoy\n`;
+  msg += `🥣 *Apetito:* ${draft.appetite || '3'}/5\n`;
+  msg += `⚡ *Ánimo:* ${draft.energy || 'Decaído'}\n`;
+  msg += `\n_Reporte generado automáticamente desde el panel de control de Sultán._`;
+
+  const url = `https://wa.me/${USER_WHATSAPP}?text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank');
+}
+
+/* ============ NAVEGACIÓN ============ */
 function switchTab(viewName){
   document.querySelectorAll('.app-view').forEach(v=>v.classList.add('hidden'));
   const target = document.getElementById('view-'+viewName);
@@ -1078,188 +1211,17 @@ function switchTab(viewName){
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-/* ============ BITÁCORA Y REPORTE WHATSAPP ============ */
-function saveClinicalLogDraft(){
-  state.clinicalDraft = {
-    appetite: document.getElementById('logAppetite').value,
-    hydration: document.getElementById('logHydration').value,
-    energy: document.getElementById('logEnergy').value
-  };
-  saveState();
-
-  if(supabaseClient){
-    const dk = localDateKey();
-    supabaseClient.from('sultan_clinical_logs').upsert({
-      log_date: dk,
-      appetite_score: parseInt(state.clinicalDraft.appetite, 10),
-      hydration_status: state.clinicalDraft.hydration,
-      energy_level: state.clinicalDraft.energy
-    }, { onConflict: 'log_date' }).then(()=>{});
-  }
-}
-
-function saveCaregiverName(){
-  const inp = document.getElementById('cfgUserName');
-  if(inp && inp.value.trim()){
-    state.userName = inp.value.trim();
-    saveState();
-    alert('Nombre de cuidador guardado: ' + state.userName);
-  }
-}
-
-function sendQuickWhatsAppReport(){
-  const dk = localDateKey();
-  const day = dayNumber();
-  const checked = SCHEDULE.filter(d=>isChecked(dk,d.id));
-  const sueroCc = checked.filter(d=>d.type==='syringe').length * 20;
-  const draft = state.clinicalDraft || {};
-
-  let msg = `*REPORTE CLÍNICO DE SULTÁN* 🐾\n`;
-  msg += `📅 *Fecha:* ${dk} (Día ${day} de 21)\n`;
-  msg += `👨‍⚕️ *Médico Tratante:* Dr. José Marcano\n\n`;
-  msg += `💊 *Tomas administradas hoy (${checked.length}/${SCHEDULE.length}):*\n`;
-  
-  SCHEDULE.forEach(d => {
-    const isDone = isChecked(dk, d.id);
-    msg += `${isDone ? '✅' : '⏳'} ${d.time} - ${d.name} (${d.dose})\n`;
-  });
-
-  msg += `\n💧 *Suero subcutáneo:* ${sueroCc} cc de 120 cc programados\n`;
-  msg += `🥣 *Apetito:* ${draft.appetite || '3'}/5\n`;
-  msg += `⚡ *Ánimo / Energía:* ${draft.energy || 'Decaído'}\n`;
-  msg += `💧 *Pliegue cutáneo:* ${draft.hydration || 'Normal'}\n`;
-
-  const phone = '584169957400';
-  const url = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
-  window.open(url, '_blank');
-}
-
-/* ============ ASISTENTE IA (GEMINI BACKEND VERCEL) ============ */
-const aiConversationHistory = [];
-
-function appendChatMessage(role, text){
-  const container = document.getElementById('aiChatMessages');
-  if(!container) return;
-
-  const isUser = role === 'user';
-  const div = document.createElement('div');
-  div.className = `flex items-start gap-2 ${isUser ? 'flex-row-reverse' : ''}`;
-
-  const iconBg = isUser ? 'bg-[#4E6E38] text-white' : 'bg-olive-100 text-olive-700';
-  const icon = isUser ? 'ph-user' : 'ph-sparkle';
-  const bubbleStyle = isUser
-    ? 'bg-[#4E6E38] text-white rounded-2xl p-3 max-w-[85%] text-xs'
-    : 'bg-[#FAF7F2] border border-sand-200 rounded-2xl p-3 max-w-[85%] text-[#2C2621] text-xs leading-relaxed';
-
-  let formatted = text
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/\n\n/g, '<br/><br/>')
-    .replace(/\n/g, '<br/>');
-
-  div.innerHTML = `
-    <div class="w-6 h-6 rounded-lg ${iconBg} flex items-center justify-center shrink-0 text-xs mt-0.5">
-      <i class="ph-bold ${icon}"></i>
-    </div>
-    <div class="${bubbleStyle}">${formatted}</div>
-  `;
-
-  container.appendChild(div);
-  container.scrollTop = container.scrollHeight;
-}
-
-function askPreset(promptText){
-  document.getElementById('aiInputText').value = promptText;
-  handleSendAiMessage();
-}
-
-async function handleSendAiMessage(e){
-  if(e) e.preventDefault();
-  const input = document.getElementById('aiInputText');
-  const text = input.value.trim();
-  if(!text) return;
-  input.value = '';
-
-  appendChatMessage('user', text);
-  aiConversationHistory.push({ role: 'user', content: text });
-
-  const btn = document.getElementById('aiSendBtn');
-  if(btn){ btn.disabled = true; btn.classList.add('opacity-50'); }
-
-  const thinkingId = 'thinking-' + Date.now();
-  const container = document.getElementById('aiChatMessages');
-  const thinkingDiv = document.createElement('div');
-  thinkingDiv.id = thinkingId;
-  thinkingDiv.className = 'flex items-start gap-2';
-  thinkingDiv.innerHTML = `
-    <div class="w-6 h-6 rounded-lg bg-olive-100 text-olive-700 flex items-center justify-center shrink-0 text-xs mt-0.5">
-      <i class="ph-bold ph-sparkle animate-spin"></i>
-    </div>
-    <div class="bg-[#FAF7F2] border border-sand-200 rounded-2xl p-2.5 text-[#7A6E60] text-xs italic">
-      Consultando protocolo de Sultán…
-    </div>
-  `;
-  container.appendChild(thinkingDiv);
-  container.scrollTop = container.scrollHeight;
-
-  try {
-    const dk = localDateKey();
-    const payload = {
-      messages: aiConversationHistory,
-      currentDay: dayNumber(),
-      todayChecks: state.checksByDate[dk] || {}
-    };
-
-    const res = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    const thinkingEl = document.getElementById(thinkingId);
-    if(thinkingEl) thinkingEl.remove();
-
-    if(!res.ok){
-      appendChatMessage('assistant', `⚠️ Para dudas de emergencia, comunícate directamente con el **Dr. José Marcano al 0416-9957400**.`);
-      return;
-    }
-
-    const data = await res.json();
-    const reply = data.reply || 'Sin respuesta.';
-    appendChatMessage('assistant', reply);
-    aiConversationHistory.push({ role: 'assistant', content: reply });
-
-    if(supabaseClient){
-      supabaseClient.from('sultan_ai_chat_messages').insert([
-        { role: 'user', content: text },
-        { role: 'assistant', content: reply }
-      ]).then(()=>{});
-    }
-
-  } catch(err){
-    const thinkingEl = document.getElementById(thinkingId);
-    if(thinkingEl) thinkingEl.remove();
-    appendChatMessage('assistant', `⚠️ Ante cualquier duda urgente, comunícate con el **Dr. José Marcano al 0416-9957400**.`);
-  } finally {
-    if(btn){ btn.disabled = false; btn.classList.remove('opacity-50'); }
-  }
-}
-
 /* ============ CONEXIÓN SUPABASE ============ */
 function initSupabase(){
-  if(!window.supabase){
-    console.warn('Supabase SDK no está cargado.');
-    return;
-  }
-
+  if(!window.supabase) return;
   try {
     supabaseClient = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
     syncFromSupabase();
     setupSupabaseRealtime();
-    updateCloudStatusBadge(true);
+    updateCloudBadge(true);
   } catch(err){
     console.error('Error inicializando Supabase:', err);
-    updateCloudStatusBadge(false);
+    updateCloudBadge(false);
   }
 }
 
@@ -1268,7 +1230,18 @@ async function syncFromSupabase(){
   const dk = localDateKey();
 
   try {
-    // 1. Cargar tomas de hoy
+    // 1. Cargar medicamentos
+    const { data: meds } = await supabaseClient
+      .from('sultan_medications')
+      .select('*')
+      .eq('is_active', true)
+      .order('scheduled_time', { ascending: true });
+
+    if(meds && meds.length > 0){
+      state.medications = meds;
+    }
+
+    // 2. Cargar tomas de hoy
     const { data: doses } = await supabaseClient
       .from('sultan_dose_logs')
       .select('*')
@@ -1277,31 +1250,18 @@ async function syncFromSupabase(){
     if(doses){
       if(!state.checksByDate[dk]) state.checksByDate[dk] = {};
       doses.forEach(row => {
-        state.checksByDate[dk][row.dose_id] = {
-          takenAt: row.taken_at,
-          by: row.administered_by || 'Familiar'
-        };
+        state.checksByDate[dk][row.dose_id] = { takenAt: row.taken_at, by: row.administered_by || 'Familiar' };
       });
     }
 
-    // 2. Cargar días completados
-    const { data: days } = await supabaseClient
-      .from('sultan_completed_days')
-      .select('*');
-
+    // 3. Cargar días completados
+    const { data: days } = await supabaseClient.from('sultan_completed_days').select('*');
     if(days){
-      days.forEach(row => {
-        state.completedDays[row.day_date] = true;
-      });
+      days.forEach(row => { state.completedDays[row.day_date] = true; });
     }
 
-    // 3. Cargar fecha de inicio si existe
-    const { data: settings } = await supabaseClient
-      .from('sultan_treatment_settings')
-      .select('*')
-      .eq('id', 'sultan_main')
-      .single();
-
+    // 4. Cargar fecha de inicio
+    const { data: settings } = await supabaseClient.from('sultan_treatment_settings').select('*').eq('id', 'sultan_main').single();
     if(settings && settings.start_date){
       state.startDate = settings.start_date;
       const inp = document.getElementById('startDateInput');
@@ -1310,10 +1270,11 @@ async function syncFromSupabase(){
 
     saveState();
     renderTimeline();
+    renderMedsList();
     renderCalendar();
     updateStats();
   } catch(e){
-    console.warn('Error al sincronizar datos desde Supabase:', e);
+    console.warn('Error sincronizando de Supabase:', e);
   }
 }
 
@@ -1323,14 +1284,11 @@ function setupSupabaseRealtime(){
 
   const dk = localDateKey();
   realtimeChannel = supabaseClient
-    .channel('sultan-realtime-doses')
+    .channel('sultan-realtime-all')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'sultan_dose_logs' }, payload => {
       if(payload.new && payload.new.log_date === dk){
         if(!state.checksByDate[dk]) state.checksByDate[dk] = {};
-        state.checksByDate[dk][payload.new.dose_id] = {
-          takenAt: payload.new.taken_at,
-          by: payload.new.administered_by || 'Familiar'
-        };
+        state.checksByDate[dk][payload.new.dose_id] = { takenAt: payload.new.taken_at, by: payload.new.administered_by || 'Familiar' };
       } else if(payload.eventType === 'DELETE' && payload.old){
         if(state.checksByDate[dk]) delete state.checksByDate[dk][payload.old.dose_id];
       }
@@ -1339,32 +1297,37 @@ function setupSupabaseRealtime(){
       renderCalendar();
       updateStats();
     })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'sultan_medications' }, () => {
+      syncFromSupabase();
+    })
     .subscribe();
 }
 
-function updateCloudStatusBadge(connected){
+function updateCloudBadge(connected){
   const dot = document.getElementById('cloudStatusDot');
   const txt = document.getElementById('cloudStatusText');
-  if(connected){
-    if(dot) dot.className = 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse';
-    if(txt) txt.textContent = 'Nube Activa (Supabase)';
-  } else {
-    if(dot) dot.className = 'w-2 h-2 rounded-full bg-stone-400';
-    if(txt) txt.textContent = 'Modo Local';
-  }
+  if(dot) dot.className = connected ? 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse' : 'w-2 h-2 rounded-full bg-stone-400';
+  if(txt) txt.textContent = connected ? 'Nube Activa (Supabase)' : 'Modo Local';
 }
 
-/* ============ NOTIFICACIONES & SONIDO ============ */
+/* ============ NOTIFICACIONES EN TELÉFONO ============ */
 async function requestNotifications(){
-  if(!('Notification' in window)){ alert('Navegador sin soporte de notificaciones.'); return; }
+  ensureAudio();
+  if(!('Notification' in window)){
+    alert('Tu navegador no soporta notificaciones de sistema.');
+    return;
+  }
   try {
     const p = await Notification.requestPermission();
-    if(p==='granted'){
+    if(p === 'granted'){
       state.notificationsEnabled = true; saveState();
-      new Notification('✅ Sultán Notificaciones Activas',{ body:'Recibirás alertas en cada toma.' });
-      alert('¡Notificaciones activadas!');
+      document.getElementById('notifBanner').classList.add('hidden');
+      sendDeviceNotification('✅ Alarmas activas', 'Recibirás avisos sonoros y en pantalla para Sultán.');
+      alert('¡Permiso concedido! Las alarmas y avisos sonoros están activos.');
+    } else {
+      alert('Debes permitir las notificaciones en los ajustes de tu navegador para que suenen.');
     }
-  } catch(e){}
+  } catch(e){ alert('Error solicitando permisos: ' + e.message); }
 }
 
 function toggleSound(){
@@ -1374,14 +1337,33 @@ function toggleSound(){
   if(!state.muted) playAlarmPattern();
 }
 
-function testAlarm(){ ensureAudio(); triggerAlarm(SCHEDULE[0]); }
+function testAlarm(){
+  ensureAudio();
+  if(state.medications.length > 0) triggerAlarm(state.medications[0]);
+  else alert('No hay medicamentos configurados.');
+}
+
+function saveClinicalLogDraft(){
+  state.clinicalDraft = {
+    appetite: document.getElementById('logAppetite').value,
+    energy: document.getElementById('logEnergy').value
+  };
+  saveState();
+}
+
+/* ============ SERVICE WORKER REGISTRATION ============ */
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/sw.js').catch(()=>{});
+}
 
 /* ============ INICIALIZACIÓN GLOBAL ============ */
 function init(){
   loadState();
 
-  const cfgUser = document.getElementById('cfgUserName');
-  if(cfgUser) cfgUser.value = state.userName || 'Jesús';
+  if('Notification' in window && Notification.permission === 'granted'){
+    const b = document.getElementById('notifBanner');
+    if(b) b.classList.add('hidden');
+  }
 
   const di = document.getElementById('startDateInput');
   if(di){
@@ -1398,13 +1380,14 @@ function init(){
   }
 
   renderTimeline();
+  renderMedsList();
   renderCalendar();
   updateStats();
   updateClock();
   updateNextDose();
 
   setInterval(()=>{ updateClock(); updateNextDose(); }, 1000);
-  setInterval(checkAlarms, 20000);
+  setInterval(checkAlarms, 10000);
 
   document.addEventListener('visibilitychange', ()=>{
     if(!document.hidden){ checkAlarms(); updateStats(); renderTimeline(); }
@@ -1414,7 +1397,6 @@ function init(){
 
   if('wakeLock' in navigator){ navigator.wakeLock.request('screen').catch(()=>{}); }
 
-  // Conectar Supabase
   initSupabase();
 }
 
