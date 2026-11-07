@@ -64,10 +64,10 @@ tailwind.config = {
 <div id="notifBanner" class="bg-amber-100 border-b border-amber-300 text-amber-900 px-4 py-2 flex items-center justify-between text-xs sticky top-0 z-[80] shadow-sm">
   <div class="flex items-center gap-2">
     <i class="ph-bold ph-bell-ringing text-amber-700 text-base animate-bounce"></i>
-    <span><strong>Activar alarmas:</strong> Notificaciones sonoras en tu teléfono.</span>
+    <span><strong>Alarmas del día:</strong> Notificaciones sonoras para cada una de las dosis.</span>
   </div>
-  <button onclick="requestNotifications()" class="px-3 py-1 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-bold rounded-xl text-[11px] shadow-sm transition">
-    Activar
+  <button onclick="requestNotifications()" class="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-black rounded-xl text-[11px] shadow-sm transition shrink-0">
+    Activar Ahora
   </button>
 </div>
 
@@ -835,45 +835,62 @@ function beep(freq, dur, vol=.5, type='sine', when=0){
 
 function playAlarmPattern(){
   if(state.muted) return;
-  beep(880,.18,.5,'sine',0);
-  beep(1100,.18,.5,'sine',.22);
-  beep(880,.18,.5,'sine',.44);
-  beep(1100,.22,.55,'sine',.66);
-  beep(1320,.35,.6,'triangle',.92);
+  const ctx = ensureAudio();
+  if(!ctx) return;
+  // Secuencia armónica penetrante y agradable (acorde de campana médica)
+  beep(784, .18, .55, 'sine', 0);          // Sol5
+  beep(1046.5, .20, .6, 'sine', .16);      // Do6
+  beep(1318.5, .22, .65, 'triangle', .32); // Mi6
+  beep(1568, .35, .7, 'sine', .52);        // Sol6
 }
 
-document.addEventListener('touchstart',()=>ensureAudio(),{once:true,passive:true});
-document.addEventListener('click',()=>ensureAudio(),{once:true});
+window.addEventListener('touchstart', () => ensureAudio(), { passive: true });
+window.addEventListener('pointerdown', () => ensureAudio(), { passive: true });
+window.addEventListener('click', () => ensureAudio(), { passive: true });
 
-/* ============ DISPARADOR DE ALARMAS ============ */
+/* ============ DISPARADOR DE ALARMAS Y NOTIFICACIONES ============ */
 let currentAlarm = null, ringInterval = null, ringingStart = 0;
+let doseTimers = [];
 
 function triggerAlarm(dose){
   if(currentAlarm) return;
-  currentAlarm = dose; ringingStart = Date.now();
+  currentAlarm = dose;
+  ringingStart = Date.now();
   const modal = document.getElementById('alarmModal');
-  const dogName = dose.dog_name || getDogNameById(dose.dog_id);
+  const dogName = cleanText(dose.dog_name || getDogNameById(dose.dog_id));
+  const doseName = cleanText(dose.name);
+  const doseDetail = cleanText(dose.detail);
+  const timeStr = dose.scheduled_time || dose.time;
 
   document.getElementById('modalDogName').textContent = '🐾 ' + dogName;
-  document.getElementById('modalDoseName').textContent = dose.name;
-  document.getElementById('modalDoseTime').textContent = formatHM(timeToDate(dose.scheduled_time || dose.time));
-  document.getElementById('modalDoseDetail').textContent = `${dose.dose} · ${dose.detail || ''}`;
-  modal.classList.remove('hidden'); modal.classList.add('flex');
+  document.getElementById('modalDoseName').textContent = doseName;
+  document.getElementById('modalDoseTime').textContent = formatHM(timeToDate(timeStr));
+  document.getElementById('modalDoseDetail').textContent = `${dose.dose} · ${doseDetail || ''}`;
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
   
+  ensureAudio();
   playAlarmPattern();
+  if(ringInterval) clearInterval(ringInterval);
   ringInterval = setInterval(()=>{
     playAlarmPattern();
     if(navigator.vibrate) navigator.vibrate([400, 200, 400, 200, 600]);
     const sec = Math.floor((Date.now()-ringingStart)/1000);
     const el = document.getElementById('modalRingingTime');
-    if(el) el.textContent = `🔔 Sonando desde hace ${sec}s`;
-  }, 2600);
+    if(el) el.textContent = `🔔 Sonando aviso sonoro (${sec}s)…`;
+  }, 2400);
 
   if(navigator.vibrate) navigator.vibrate([500, 250, 500, 250, 500]);
-  sendDeviceNotification(`⏰ ${dogName}: Hora de ${dose.name}`, `${dose.dose} - ${dose.detail || ''}`);
+  
+  const doseTag = 'dose-' + dose.id + '-' + localDateKey();
+  sendDeviceNotification(
+    `⏰ ${dogName}: Toca ${doseName} (${dose.dose})`,
+    `Hora: ${timeStr} · ${doseDetail || 'Tratamiento asignado según horario'}`,
+    doseTag
+  );
 }
 
-function sendDeviceNotification(title, body){
+function sendDeviceNotification(title, body, tag='dog-dose'){
   if('Notification' in window && Notification.permission === 'granted'){
     try {
       if('serviceWorker' in navigator && navigator.serviceWorker.controller){
@@ -881,13 +898,20 @@ function sendDeviceNotification(title, body){
           reg.showNotification(title, {
             body: body,
             icon: '/favicon.ico',
-            vibrate: [300, 150, 300, 150, 500],
+            badge: '/favicon.ico',
+            vibrate: [500, 250, 500, 250, 500],
             requireInteraction: true,
-            tag: 'dog-dose'
+            tag: tag,
+            renotify: true
           });
         });
       } else {
-        new Notification(title, { body: body, requireInteraction: true });
+        new Notification(title, {
+          body: body,
+          icon: '/favicon.ico',
+          requireInteraction: true,
+          tag: tag
+        });
       }
     } catch(e){}
   }
@@ -895,7 +919,8 @@ function sendDeviceNotification(title, body){
 
 function closeAlarm(){
   const modal = document.getElementById('alarmModal');
-  modal.classList.add('hidden'); modal.classList.remove('flex');
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
   if(ringInterval){ clearInterval(ringInterval); ringInterval=null; }
   if(navigator.vibrate) navigator.vibrate(0);
   currentAlarm = null;
@@ -913,43 +938,86 @@ function snoozeAlarm(min=10){
   const id = currentAlarm.id;
   state.snooze = { doseId:id, until: Date.now()+min*60000 };
   delete state.firedToday.ids[id];
-  saveState(); closeAlarm();
+  saveState();
+  closeAlarm();
 }
 
+/* Agenda timers exactos para cada dosis del día */
+function scheduleDosesForDay(){
+  doseTimers.forEach(t => clearTimeout(t));
+  doseTimers = [];
+
+  const now = new Date();
+  const todayKey = localDateKey(now);
+
+  state.medications.forEach(dose => {
+    if(isChecked(todayKey, dose.id)) return;
+    const target = timeToDate(dose.scheduled_time || dose.time);
+    const msUntil = target.getTime() - now.getTime();
+
+    // Si la dosis toca más tarde hoy, agendar timer exacto
+    if(msUntil > 0 && msUntil < 86400000){
+      const timer = setTimeout(() => {
+        checkAlarms();
+      }, msUntil);
+      doseTimers.push(timer);
+    }
+  });
+}
+
+/* Revisa y dispara alarmas para cada dosis del día, iniciando a las 00:00 */
 function checkAlarms(){
   const now = new Date();
   const todayKey = localDateKey(now);
   const nowMin = minutesOfDay(now);
 
+  // Cambio de día: a las 00:00 (inicio del día) se reinicia el ciclo de alarmas
   if(state.firedToday.date !== todayKey){
     state.firedToday = { date:todayKey, ids:{} };
-    state.snooze = null; saveState();
-    renderTimeline(); renderCalendar(); updateStats();
+    state.snooze = null;
+    saveState();
+    renderTimeline();
+    renderCalendar();
+    updateStats();
+    scheduleDosesForDay();
   }
 
+  // Alarma pospuesta (snooze)
   if(state.snooze){
     if(Date.now() >= state.snooze.until){
-      const dose = state.medications.find(d=>d.id===state.snooze.doseId);
-      state.snooze = null; saveState();
-      if(dose && !isChecked(todayKey,dose.id) && !currentAlarm){
+      const dose = state.medications.find(d => d.id === state.snooze.doseId);
+      state.snooze = null;
+      saveState();
+      if(dose && !isChecked(todayKey, dose.id) && !currentAlarm){
+        state.firedToday.ids[dose.id] = Date.now();
+        saveState();
         triggerAlarm(dose);
-        state.firedToday.ids[dose.id]=true; saveState();
       }
     }
     return;
   }
 
   if(currentAlarm) return;
-  let best=null, bestDiff=Infinity;
-  for(const dose of state.medications){
-    if(state.firedToday.ids[dose.id]) continue;
-    if(isChecked(todayKey,dose.id)) continue;
-    const diff = nowMin - parseTime(dose.scheduled_time || dose.time);
-    if(diff>=0 && diff<=120 && diff<bestDiff){ best=dose; bestDiff=diff; }
-  }
-  if(best){
-    state.firedToday.ids[best.id]=true; saveState();
-    triggerAlarm(best);
+
+  // Evaluar todas las dosis del día cuya hora ya haya llegado o pasado (desde las 00:00)
+  // Se ordenan cronológicamente para disparar en el orden que corresponden
+  const pendingDoses = state.medications
+    .filter(dose => {
+      if(isChecked(todayKey, dose.id)) return false;
+      const scheduledMin = parseTime(dose.scheduled_time || dose.time);
+      return nowMin >= scheduledMin; // Ya es o pasó su hora programada hoy
+    })
+    .sort((a, b) => parseTime(a.scheduled_time || a.time) - parseTime(b.scheduled_time || b.time));
+
+  for(const dose of pendingDoses){
+    const lastFired = state.firedToday.ids[dose.id];
+    // Disparar si no ha sonado hoy, o si sonó hace más de 20 min y sigue sin administrarse
+    if(!lastFired || (Date.now() - lastFired > 20 * 60 * 1000)){
+      state.firedToday.ids[dose.id] = Date.now();
+      saveState();
+      triggerAlarm(dose);
+      break; // Atender una a la vez
+    }
   }
 }
 
@@ -1797,6 +1865,8 @@ async function syncFromSupabase(){
     renderCalendar();
     updateProfileView();
     updateStats();
+    scheduleDosesForDay();
+    checkAlarms();
   } catch(e){
     console.warn('Error sincronizando de Supabase:', e);
   }
@@ -1842,8 +1912,10 @@ async function requestNotifications(){
     if(p === 'granted'){
       state.notificationsEnabled = true; saveState();
       document.getElementById('notifBanner').classList.add('hidden');
-      sendDeviceNotification('✅ Alarmas activas', 'Recibirás avisos sonoros para los tratamientos.');
-      alert('¡Permiso concedido! Alarmas y avisos activos.');
+      scheduleDosesForDay();
+      sendDeviceNotification('🔔 Alarmas Activas para Sultán', 'Recibirás avisos sonoros y notificaciones para cada una de las dosis del día desde las 00:00.');
+      checkAlarms();
+      alert('¡Permiso concedido! Alarmas y avisos activos para cada dosis del día.');
     }
   } catch(e){}
 }
@@ -1894,15 +1966,16 @@ function init(){
   updateStats();
   updateClock();
   updateNextDose();
+  scheduleDosesForDay();
 
   setInterval(()=>{ updateClock(); updateNextDose(); }, 1000);
-  setInterval(checkAlarms, 10000);
+  setInterval(checkAlarms, 5000);
 
   document.addEventListener('visibilitychange', ()=>{
     if(!document.hidden){ checkAlarms(); updateStats(); renderTimeline(); }
   });
   window.addEventListener('focus', ()=>{ checkAlarms(); updateStats(); });
-  setTimeout(checkAlarms, 2000);
+  setTimeout(checkAlarms, 800);
 
   if('wakeLock' in navigator){ navigator.wakeLock.request('screen').catch(()=>{}); }
 
