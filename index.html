@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="es" class="h-full bg-[#F4EFE6] text-[#2C2621]">
+<html lang="es" class="h-full bg-[#F5EFE6] text-[#2C2621]">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#F4EFE6">
+<meta name="theme-color" content="#F5EFE6">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Tratamiento Canino">
@@ -26,9 +26,9 @@ tailwind.config = {
   theme: {
     extend: {
       colors: {
-        cream: { 50: '#FAF7F2', 100: '#F4EFE6', 200: '#E9E1D2', 300: '#DCCFBA' },
+        cream: { 50: '#FAF8F5', 100: '#F5EFE6', 200: '#EAE1D3', 300: '#DCCFBA' },
         olive: { 50: '#F2F6ED', 100: '#E2ECD8', 200: '#C7DCA7', 500: '#648842', 600: '#4E6E38', 700: '#3D572B', 800: '#2F4321' },
-        sand: { 100: '#EFE8DC', 200: '#E4D8C4', 300: '#CEBEA5', 800: '#5C4F3D' },
+        sand: { 100: '#EFE8DC', 200: '#E5DCCE', 300: '#CEBEA5', 800: '#5C4F3D' },
         bark: '#2C2621',
       },
       fontFamily: {
@@ -44,30 +44,30 @@ tailwind.config = {
   html, body { -webkit-tap-highlight-color: transparent; }
   body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-variant-numeric: tabular-nums; }
   .font-mono { font-family: 'JetBrains Mono', monospace; }
-  ::-webkit-scrollbar { width: 5px; height: 5px; }
-  ::-webkit-scrollbar-track { background: #F4EFE6; }
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: #F5EFE6; }
   ::-webkit-scrollbar-thumb { background: #DCCFBA; border-radius: 9999px; }
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   @keyframes ring { 0%, 100% { transform: rotate(0); } 20% { transform: rotate(14deg); } 40% { transform: rotate(-14deg); } 60% { transform: rotate(10deg); } 80% { transform: rotate(-10deg); } }
   .animate-ring { animation: ring 0.9s ease-in-out infinite; }
-  .safe-top { padding-top: max(0.75rem, env(safe-area-inset-top)); }
-  .safe-bottom { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+  .safe-top { padding-top: max(0.6rem, env(safe-area-inset-top)); }
+  .safe-bottom { padding-bottom: max(1.2rem, env(safe-area-inset-bottom)); }
   button { touch-action: manipulation; }
 </style>
 </head>
-<body class="min-h-full bg-[#F4EFE6] text-[#2C2621] antialiased selection:bg-olive-200">
+<body class="min-h-full bg-[#F5EFE6] text-[#2C2621] antialiased selection:bg-olive-200">
 
 <!-- ============================================================================== -->
 <!-- BANNER PERMISOS DE ALARMA -->
 <!-- ============================================================================== -->
-<div id="notifBanner" class="bg-amber-100 border-b border-amber-300 text-amber-900 px-4 py-2.5 flex items-center justify-between text-xs sticky top-0 z-[80] shadow-sm">
+<div id="notifBanner" class="bg-amber-100 border-b border-amber-300 text-amber-900 px-4 py-2 flex items-center justify-between text-xs sticky top-0 z-[80] shadow-sm">
   <div class="flex items-center gap-2">
     <i class="ph-bold ph-bell-ringing text-amber-700 text-base animate-bounce"></i>
-    <span><strong>Activa las alarmas:</strong> Permite avisos sonoros y en pantalla para los tratamientos.</span>
+    <span><strong>Activar alarmas:</strong> Notificaciones sonoras en tu teléfono.</span>
   </div>
-  <button onclick="requestNotifications()" class="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-bold rounded-xl text-[11px] shadow-sm transition">
-    Activar Ahora
+  <button onclick="requestNotifications()" class="px-3 py-1 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-bold rounded-xl text-[11px] shadow-sm transition">
+    Activar
   </button>
 </div>
 
@@ -75,33 +75,33 @@ tailwind.config = {
 <!-- MODAL ALARMA MEDICACIÓN -->
 <!-- ============================================================================== -->
 <div id="alarmModal" class="fixed inset-0 z-[100] bg-black/70 backdrop-blur-md hidden items-center justify-center p-4">
-  <div class="bg-[#FAF7F2] border-2 border-olive-500 rounded-[32px] p-6 sm:p-8 max-w-sm w-full shadow-2xl text-center relative overflow-hidden safe-bottom">
-    <div class="w-20 h-20 bg-olive-100 text-olive-700 rounded-full mx-auto flex items-center justify-center text-4xl mb-4 shadow-inner animate-ring">
+  <div class="bg-[#FAF8F5] border-2 border-olive-500 rounded-[32px] p-6 max-w-sm w-full shadow-2xl text-center relative overflow-hidden safe-bottom">
+    <div class="w-18 h-18 bg-olive-100 text-olive-700 rounded-full mx-auto flex items-center justify-center text-4xl mb-3 shadow-inner animate-ring">
       <i class="ph-bold ph-bell-ringing"></i>
     </div>
     <span class="inline-block text-[10px] font-black tracking-widest text-olive-700 uppercase bg-olive-200 px-3 py-1 rounded-full mb-2">⏰ HORA DE LA TOMA</span>
     <p id="modalDogName" class="text-xs font-black text-olive-800 uppercase tracking-wider mb-1">🐾 Paciente</p>
-    <h3 id="modalDoseName" class="text-2xl font-black text-[#2C2621] mb-1">—</h3>
+    <h3 id="modalDoseName" class="text-xl font-black text-[#2C2621] mb-1">—</h3>
     <p id="modalDoseTime" class="text-olive-700 font-mono font-black text-lg mb-1">--:--</p>
-    <p id="modalDoseDetail" class="text-[#6A6055] text-xs mb-6 font-medium">—</p>
-    <div class="space-y-2.5">
-      <button onclick="confirmCurrentAlarm()" class="w-full py-4 bg-olive-600 hover:bg-olive-700 active:scale-95 text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-olive-600/30 flex items-center justify-center gap-2 transition">
+    <p id="modalDoseDetail" class="text-[#6A6055] text-xs mb-5 font-medium">—</p>
+    <div class="space-y-2">
+      <button onclick="confirmCurrentAlarm()" class="w-full py-3.5 bg-olive-600 hover:bg-olive-700 active:scale-95 text-white font-extrabold text-sm rounded-2xl shadow-md flex items-center justify-center gap-2 transition">
         <i class="ph-bold ph-check-circle text-lg"></i> Confirmar Administrado
       </button>
-      <button onclick="snoozeAlarm(10)" class="w-full py-3 bg-cream-200 hover:bg-cream-300 active:scale-95 text-[#5C4F3D] font-bold text-xs rounded-2xl border border-sand-300 flex items-center justify-center gap-2 transition">
-        <i class="ph-bold ph-clock-afternoon text-base"></i> Posponer 10 min
+      <button onclick="snoozeAlarm(10)" class="w-full py-2.5 bg-cream-200 hover:bg-cream-300 active:scale-95 text-[#5C4F3D] font-bold text-xs rounded-2xl border border-sand-300 flex items-center justify-center gap-1.5 transition">
+        <i class="ph-bold ph-clock-afternoon text-sm"></i> Posponer 10 min
       </button>
     </div>
-    <p id="modalRingingTime" class="text-[10px] text-stone-400 mt-4 font-mono">🔔 Sonando aviso sonoro…</p>
+    <p id="modalRingingTime" class="text-[10px] text-stone-400 mt-3 font-mono">🔔 Sonando aviso sonoro…</p>
   </div>
 </div>
 
 <!-- ============================================================================== -->
-<!-- MODAL CRUD: REGISTRAR / EDITAR PERRO CON FOTO -->
+<!-- MODAL REGISTRAR / EDITAR PERRO CON FOTO -->
 <!-- ============================================================================== -->
 <div id="dogModal" class="fixed inset-0 z-[96] bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
-  <div class="bg-[#FAF7F2] border border-sand-300 rounded-[32px] p-6 max-w-sm w-full shadow-2xl relative max-h-[90vh] overflow-y-auto">
-    <div class="flex items-center justify-between mb-4">
+  <div class="bg-[#FAF8F5] border border-sand-300 rounded-[32px] p-6 max-w-sm w-full shadow-2xl relative max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between mb-3">
       <h3 id="dogModalTitle" class="text-base font-black text-[#2C2621] flex items-center gap-2">
         <i class="ph-bold ph-dog text-olive-600"></i> Registrar Perro
       </h3>
@@ -113,55 +113,55 @@ tailwind.config = {
     <form onsubmit="handleSaveDog(event)" class="space-y-3">
       <input type="hidden" id="dogFormId">
       
-      <!-- FOTO DEL PERRO (Subir imagen con compresión automática a Canvas) -->
-      <div class="text-center pb-2">
-        <div class="relative w-24 h-24 mx-auto mb-2">
-          <div id="dogPhotoPreview" class="w-24 h-24 rounded-3xl bg-olive-100 border-2 border-olive-600 flex items-center justify-center text-3xl text-olive-700 overflow-hidden shadow-inner">
+      <!-- FOTO DEL PERRO -->
+      <div class="text-center pb-1">
+        <div class="relative w-22 h-22 mx-auto mb-1.5">
+          <div id="dogPhotoPreview" class="w-22 h-22 rounded-3xl bg-olive-100 border-2 border-olive-600 flex items-center justify-center text-3xl text-olive-700 overflow-hidden shadow-inner">
             <i class="ph-fill ph-dog"></i>
           </div>
-          <label for="dogPhotoInput" class="absolute -bottom-1 -right-1 w-8 h-8 bg-olive-600 text-white rounded-xl flex items-center justify-center cursor-pointer shadow-md active:scale-90 transition">
-            <i class="ph-bold ph-camera"></i>
+          <label for="dogPhotoInput" class="absolute -bottom-1 -right-1 w-7 h-7 bg-olive-600 text-white rounded-xl flex items-center justify-center cursor-pointer shadow-md active:scale-90 transition">
+            <i class="ph-bold ph-camera text-sm"></i>
           </label>
         </div>
         <input type="file" id="dogPhotoInput" accept="image/*" class="hidden" onchange="handleDogPhotoUpload(event)">
-        <span class="text-[10px] text-[#7A6E60] font-semibold">Toca la cámara para subir foto del perro</span>
+        <span class="text-[10px] text-[#7A6E60] font-semibold">Toca la cámara para subir foto</span>
       </div>
 
       <div>
-        <label class="block text-[10px] font-bold text-[#7A6E60] uppercase mb-1">Nombre del Perro</label>
+        <label class="block text-[10px] font-bold text-[#7A6E60] uppercase mb-0.5">Nombre del Perro</label>
         <input type="text" id="dogFormName" required placeholder="Ej: Sultán, Max, Bella" class="w-full bg-white border border-sand-200 rounded-xl px-3 py-2 text-xs text-[#2C2621] focus:outline-none focus:border-olive-600 font-bold">
       </div>
 
       <div class="grid grid-cols-2 gap-2">
         <div>
-          <label class="block text-[10px] font-bold text-[#7A6E60] uppercase mb-1">Raza / Tipo</label>
+          <label class="block text-[10px] font-bold text-[#7A6E60] uppercase mb-0.5">Raza</label>
           <input type="text" id="dogFormBreed" placeholder="Ej: Golden Retriever" class="w-full bg-white border border-sand-200 rounded-xl px-3 py-2 text-xs text-[#2C2621] focus:outline-none focus:border-olive-600">
         </div>
         <div>
-          <label class="block text-[10px] font-bold text-[#7A6E60] uppercase mb-1">Peso</label>
+          <label class="block text-[10px] font-bold text-[#7A6E60] uppercase mb-0.5">Peso</label>
           <input type="text" id="dogFormWeight" placeholder="Ej: 25 kg" class="w-full bg-white border border-sand-200 rounded-xl px-3 py-2 text-xs text-[#2C2621] focus:outline-none focus:border-olive-600">
         </div>
       </div>
 
       <div class="grid grid-cols-2 gap-2">
         <div>
-          <label class="block text-[10px] font-bold text-[#7A6E60] uppercase mb-1">Edad</label>
+          <label class="block text-[10px] font-bold text-[#7A6E60] uppercase mb-0.5">Edad</label>
           <input type="text" id="dogFormAge" placeholder="Ej: 5 años" class="w-full bg-white border border-sand-200 rounded-xl px-3 py-2 text-xs text-[#2C2621] focus:outline-none focus:border-olive-600">
         </div>
         <div>
-          <label class="block text-[10px] font-bold text-[#7A6E60] uppercase mb-1">Tratamiento / Diagnóstico</label>
+          <label class="block text-[10px] font-bold text-[#7A6E60] uppercase mb-0.5">Diagnóstico / Condición</label>
           <input type="text" id="dogFormCondition" placeholder="Ej: Ehrlichiosis 21 días" class="w-full bg-white border border-sand-200 rounded-xl px-3 py-2 text-xs text-[#2C2621] focus:outline-none focus:border-olive-600">
         </div>
       </div>
 
       <div>
-        <label class="block text-[10px] font-bold text-[#7A6E60] uppercase mb-1">Alergias o Reglas Clínicas</label>
+        <label class="block text-[10px] font-bold text-[#7A6E60] uppercase mb-0.5">Alergias o Reglas Especiales</label>
         <input type="text" id="dogFormAllergies" placeholder="Ej: Cero lácteos con la Doxiciclina" class="w-full bg-white border border-sand-200 rounded-xl px-3 py-2 text-xs text-[#2C2621] focus:outline-none focus:border-olive-600">
       </div>
 
       <div class="pt-2 flex gap-2">
         <button type="submit" class="flex-1 py-3 bg-olive-600 hover:bg-olive-700 active:scale-95 text-white font-extrabold text-xs rounded-xl shadow-sm transition">
-          Guardar en Base de Datos
+          Guardar Perro
         </button>
         <button type="button" onclick="closeDogModal()" class="px-4 py-3 bg-sand-100 hover:bg-sand-200 text-[#5C4F3D] font-bold text-xs rounded-xl transition">
           Cancelar
@@ -172,11 +172,11 @@ tailwind.config = {
 </div>
 
 <!-- ============================================================================== -->
-<!-- MODAL CRUD: AGREGAR / EDITAR FÁRMACO -->
+<!-- MODAL AGREGAR / EDITAR FÁRMACO -->
 <!-- ============================================================================== -->
 <div id="medModal" class="fixed inset-0 z-[95] bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
-  <div class="bg-[#FAF7F2] border border-sand-300 rounded-[32px] p-6 max-w-sm w-full shadow-2xl relative">
-    <div class="flex items-center justify-between mb-4">
+  <div class="bg-[#FAF8F5] border border-sand-300 rounded-[32px] p-6 max-w-sm w-full shadow-2xl relative">
+    <div class="flex items-center justify-between mb-3">
       <h3 id="medModalTitle" class="text-base font-black text-[#2C2621] flex items-center gap-2">
         <i class="ph-bold ph-pill text-olive-600"></i> Nuevo Fármaco
       </h3>
@@ -189,30 +189,30 @@ tailwind.config = {
       <input type="hidden" id="medFormId">
 
       <div>
-        <label class="block text-[10px] font-bold text-[#7A6E60] uppercase mb-1">Asignar al Perro</label>
+        <label class="block text-[10px] font-bold text-[#7A6E60] uppercase mb-0.5">Asignar al Perro</label>
         <select id="medFormDogId" required class="w-full bg-white border border-sand-200 rounded-xl px-3 py-2 text-xs text-[#2C2621] font-bold focus:outline-none focus:border-olive-600">
           <!-- Opciones dinámicas -->
         </select>
       </div>
       
       <div>
-        <label class="block text-[10px] font-bold text-[#7A6E60] uppercase mb-1">Nombre del Medicamento</label>
-        <input type="text" id="medFormName" required placeholder="Ej: Omeprazol, Doxiciclina 100mg" class="w-full bg-white border border-sand-200 rounded-xl px-3 py-2 text-xs text-[#2C2621] focus:outline-none focus:border-olive-600">
+        <label class="block text-[10px] font-bold text-[#7A6E60] uppercase mb-0.5">Nombre del Medicamento</label>
+        <input type="text" id="medFormName" required placeholder="Ej: Omeprazol, Doxiciclina 100mg" class="w-full bg-white border border-sand-200 rounded-xl px-3 py-2 text-xs text-[#2C2621] focus:outline-none focus:border-olive-600 font-bold">
       </div>
 
       <div class="grid grid-cols-2 gap-2">
         <div>
-          <label class="block text-[10px] font-bold text-[#7A6E60] uppercase mb-1">Dosis Exacta</label>
+          <label class="block text-[10px] font-bold text-[#7A6E60] uppercase mb-0.5">Dosis</label>
           <input type="text" id="medFormDose" required placeholder="Ej: 1 tableta / 2 cc" class="w-full bg-white border border-sand-200 rounded-xl px-3 py-2 text-xs text-[#2C2621] focus:outline-none focus:border-olive-600">
         </div>
         <div>
-          <label class="block text-[10px] font-bold text-[#7A6E60] uppercase mb-1">Horario (HH:MM)</label>
-          <input type="time" id="medFormTime" required class="w-full bg-white border border-sand-200 rounded-xl px-3 py-2 text-xs text-[#2C2621] font-mono focus:outline-none focus:border-olive-600">
+          <label class="block text-[10px] font-bold text-[#7A6E60] uppercase mb-0.5">Horario</label>
+          <input type="time" id="medFormTime" required class="w-full bg-white border border-sand-200 rounded-xl px-3 py-2 text-xs text-[#2C2621] font-mono focus:outline-none focus:border-olive-600 font-bold">
         </div>
       </div>
 
       <div>
-        <label class="block text-[10px] font-bold text-[#7A6E60] uppercase mb-1">Tipo de Presentación</label>
+        <label class="block text-[10px] font-bold text-[#7A6E60] uppercase mb-0.5">Tipo de Fármaco</label>
         <select id="medFormType" class="w-full bg-white border border-sand-200 rounded-xl px-3 py-2 text-xs text-[#2C2621] focus:outline-none focus:border-olive-600">
           <option value="pill">Píldora / Tableta / Protector</option>
           <option value="liquid">Líquido / Jarabe / Gotas</option>
@@ -221,13 +221,13 @@ tailwind.config = {
       </div>
 
       <div>
-        <label class="block text-[10px] font-bold text-[#7A6E60] uppercase mb-1">¿Para qué sirve? / Instrucciones</label>
+        <label class="block text-[10px] font-bold text-[#7A6E60] uppercase mb-0.5">Instrucciones / Para qué sirve</label>
         <textarea id="medFormDetail" rows="2" placeholder="Ej: Protector gástrico previo a antibiótico en ayunas." class="w-full bg-white border border-sand-200 rounded-xl px-3 py-2 text-xs text-[#2C2621] focus:outline-none focus:border-olive-600"></textarea>
       </div>
 
       <div class="pt-2 flex gap-2">
         <button type="submit" class="flex-1 py-3 bg-olive-600 hover:bg-olive-700 active:scale-95 text-white font-extrabold text-xs rounded-xl shadow-sm transition">
-          Guardar Fármaco en BD
+          Guardar Fármaco
         </button>
         <button type="button" onclick="closeMedModal()" class="px-4 py-3 bg-sand-100 hover:bg-sand-200 text-[#5C4F3D] font-bold text-xs rounded-xl transition">
           Cancelar
@@ -238,12 +238,12 @@ tailwind.config = {
 </div>
 
 <!-- ============================================================================== -->
-<!-- CONTENEDOR APP MOBILE-FIRST -->
+<!-- CONTENEDOR PRINCIPAL MOBILE -->
 <!-- ============================================================================== -->
 <div class="max-w-md mx-auto min-h-screen flex flex-col safe-top pb-24 px-4 sm:px-0">
 
-  <!-- TOP BAR / HEADER -->
-  <header class="py-2.5 flex items-center justify-between border-b border-sand-200 mb-2">
+  <!-- CABECERA SUPERIOR LIMPIA -->
+  <header class="py-2 flex items-center justify-between border-b border-sand-200 mb-2">
     <div class="flex items-center gap-2.5">
       <div id="hdrDogAvatar" class="w-10 h-10 rounded-2xl bg-olive-600 text-white flex items-center justify-center text-xl shadow-sm shrink-0 overflow-hidden">
         <i class="ph-bold ph-paw-print"></i>
@@ -251,7 +251,7 @@ tailwind.config = {
       <div>
         <div class="flex items-center gap-2">
           <h1 class="text-base font-black tracking-tight text-[#2C2621]" id="hdrDogTitle">Sultán</h1>
-          <span class="text-[9px] font-extrabold bg-olive-100 text-olive-700 border border-olive-200 px-2 py-0.5 rounded-full">
+          <span class="text-[9px] font-black bg-olive-100 text-olive-700 border border-olive-200 px-2 py-0.5 rounded-full">
             Día <span id="hdrDayNumber">1</span> de 21
           </span>
         </div>
@@ -262,48 +262,60 @@ tailwind.config = {
       </div>
     </div>
 
+    <!-- Acciones claras: 1 Test Alarma, 1 WhatsApp, 1 Silencio -->
     <div class="flex items-center gap-1.5">
       <button onclick="testAlarm()" title="Probar Alarma Sonora" class="w-8 h-8 rounded-xl bg-sand-100 hover:bg-sand-200 border border-sand-200 text-[#5C4F3D] flex items-center justify-center text-sm transition">
-        <i class="ph-bold ph-speaker-high"></i>
+        <i class="ph-bold ph-bell-ringing"></i>
       </button>
       <button onclick="sendQuickWhatsAppReport()" title="Enviar Reporte por WhatsApp" class="w-8 h-8 rounded-xl bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 text-emerald-800 flex items-center justify-center text-sm transition">
         <i class="ph-bold ph-whatsapp-logo"></i>
       </button>
-      <button onclick="toggleSound()" id="btnSound" title="Silenciar" class="w-8 h-8 rounded-xl bg-sand-100 hover:bg-sand-200 border border-sand-200 text-[#5C4F3D] flex items-center justify-center text-sm transition">
+      <button onclick="toggleSound()" id="btnSound" title="Silenciar / Activar sonido" class="w-8 h-8 rounded-xl bg-sand-100 hover:bg-sand-200 border border-sand-200 text-[#5C4F3D] flex items-center justify-center text-sm transition">
         <i id="soundIcon" class="ph-bold ph-speaker-simple-high"></i>
       </button>
     </div>
   </header>
 
-  <!-- SELECTOR DE PERRO AL ENTRAR (PÍLDORAS DINÁMICAS CON FOTO) -->
-  <div class="py-2 flex items-center gap-2 overflow-x-auto no-scrollbar border-b border-sand-200/70 mb-3" id="dogChipsContainer">
+  <!-- SELECTOR DE PERRO ELEGANTE -->
+  <div class="py-1.5 flex items-center gap-2 overflow-x-auto no-scrollbar border-b border-sand-200/70 mb-3" id="dogChipsContainer">
     <!-- Píldoras de perros dinámicas -->
   </div>
 
   <!-- ============================================================================== -->
-  <!-- VISTA 1: CRONOGRAMA MULTI-PERRO (ESTILO SCREENSHOT 2) -->
+  <!-- VISTA 1: CRONOGRAMA COMPACTO (BOTÓN A LA DERECHA, CERO SOBREPOSICIÓN) -->
   <!-- ============================================================================== -->
-  <main id="view-cronograma" class="app-view space-y-4">
+  <main id="view-cronograma" class="app-view space-y-3">
+    
     <div class="flex items-center justify-between">
-      <h2 class="text-lg font-black tracking-wider text-[#2C2621] uppercase flex items-center gap-1.5">
-        Cronograma <i class="ph-bold ph-clock-afternoon text-olive-600"></i>
+      <h2 class="text-base font-black tracking-wider text-[#2C2621] uppercase flex items-center gap-1.5">
+        Cronograma <i class="ph-bold ph-clock text-olive-600"></i>
       </h2>
-      <div class="text-right">
-        <div id="liveClock" class="text-xs font-mono font-bold text-olive-700">--:--:--</div>
-        <div id="nextDoseMini" class="text-[10px] text-[#7A6E60]">Próxima dosis: <span id="nextDoseCount" class="font-mono font-bold text-olive-600">--:--</span></div>
+      <div class="bg-white border border-sand-200 px-2.5 py-1 rounded-xl text-xs font-mono font-bold text-olive-700 shadow-sm" id="liveClock">
+        --:--:--
       </div>
     </div>
 
-    <!-- Progreso del día -->
-    <div class="bg-white/80 border border-sand-200 rounded-2xl p-3 shadow-sm flex items-center justify-between gap-3">
-      <div class="flex items-center gap-2.5">
-        <div class="w-9 h-9 rounded-xl bg-olive-100 text-olive-700 flex items-center justify-center text-lg">
-          <i class="ph-bold ph-pill"></i>
+    <!-- Tarjeta Próxima Toma Limpia -->
+    <div class="bg-white border border-sand-200 rounded-2xl p-3 shadow-sm flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div class="w-8 h-8 rounded-xl bg-olive-100 text-olive-700 flex items-center justify-center text-base shrink-0">
+          <i class="ph-bold ph-timer"></i>
         </div>
-        <div>
-          <span class="text-[10px] text-[#7A6E60] font-semibold block uppercase">Tomas de hoy</span>
-          <span id="statProgressText" class="text-xs font-extrabold text-[#2C2621]">0 completadas</span>
+        <div class="min-w-0">
+          <span class="text-[10px] text-[#7A6E60] font-semibold block uppercase">Próxima Toma</span>
+          <span id="nextDoseText" class="text-xs font-extrabold text-[#2C2621] truncate block">Cargando…</span>
         </div>
+      </div>
+      <div class="text-right shrink-0">
+        <span id="nextDoseCountdown" class="text-xs font-mono font-black text-olive-700">--:--</span>
+      </div>
+    </div>
+
+    <!-- Barra Progreso Diario -->
+    <div class="bg-white border border-sand-200 rounded-2xl p-3 shadow-sm flex items-center justify-between gap-3">
+      <div>
+        <span class="text-[10px] text-[#7A6E60] font-semibold block uppercase">Tomas de hoy</span>
+        <span id="statProgressText" class="text-xs font-extrabold text-[#2C2621]">0 completadas</span>
       </div>
       <div class="w-28 text-right">
         <span id="statPercentText" class="text-xs font-black text-olive-600 font-mono">0%</span>
@@ -313,15 +325,12 @@ tailwind.config = {
       </div>
     </div>
 
-    <!-- Timeline vertical con línea conectora y avatares por perro -->
-    <div class="relative pl-3">
-      <div class="absolute left-10 top-6 bottom-6 w-0.5 bg-[#DCCFBA]"></div>
-      <div id="timelineContainer" class="space-y-4 relative">
-        <!-- Render dinámico -->
-      </div>
+    <!-- Timeline con botón lateral compacto (Diseño Exacto del Screenshot de Referencia) -->
+    <div class="relative pl-2 space-y-2.5" id="timelineContainer">
+      <!-- Render dinámico -->
     </div>
 
-    <!-- Botón WhatsApp Directo al 0412-3504829 -->
+    <!-- Botón Reporte WhatsApp -->
     <div class="pt-2 flex gap-2">
       <button onclick="sendQuickWhatsAppReport()" class="flex-1 py-3.5 bg-[#4E6E38] hover:bg-olive-700 active:scale-95 text-white font-extrabold text-xs rounded-2xl shadow-sm flex items-center justify-center gap-2 transition">
         <i class="ph-bold ph-whatsapp-logo text-base"></i> Enviar Reporte a WhatsApp (0412-3504829)
@@ -333,20 +342,21 @@ tailwind.config = {
   </main>
 
   <!-- ============================================================================== -->
-  <!-- VISTA 2: INVENTARIO FÁRMACOS CON CRUD (SCREENSHOT 1) -->
+  <!-- VISTA 2: INVENTARIO (SIN SOBREPOSICIÓN DE TEXTO, ESPACIO LIMPIO) -->
   <!-- ============================================================================== -->
-  <main id="view-inventario" class="app-view hidden space-y-4">
+  <main id="view-inventario" class="app-view hidden space-y-3">
     <div class="flex items-center justify-between">
-      <h2 class="text-lg font-black tracking-wider text-[#2C2621] uppercase flex items-center gap-1.5">
+      <h2 class="text-base font-black tracking-wider text-[#2C2621] uppercase flex items-center gap-1.5">
         Inventario <i class="ph-bold ph-pill text-olive-600"></i>
       </h2>
-      <button onclick="openAddMedModal()" class="px-3.5 py-1.5 bg-olive-600 hover:bg-olive-700 text-white text-xs font-bold rounded-xl flex items-center gap-1 shadow-sm active:scale-95 transition">
+      <button onclick="openAddMedModal()" class="px-3 py-1.5 bg-olive-600 hover:bg-olive-700 text-white text-xs font-bold rounded-xl flex items-center gap-1 shadow-sm active:scale-95 transition">
         <i class="ph-bold ph-plus"></i> Agregar Fármaco
       </button>
     </div>
 
-    <div id="medsListContainer" class="space-y-3">
-      <!-- Generado dinámicamente -->
+    <!-- Lista de Fármacos con espaciado amplio y títulos sin truncar -->
+    <div id="medsListContainer" class="space-y-2.5">
+      <!-- Render dinámico -->
     </div>
 
     <button onclick="openAddMedModal()" class="w-full py-3.5 bg-[#4E6E38] hover:bg-olive-700 active:scale-95 text-white font-extrabold text-xs rounded-2xl shadow-sm flex items-center justify-center gap-2 transition">
@@ -355,23 +365,24 @@ tailwind.config = {
   </main>
 
   <!-- ============================================================================== -->
-  <!-- VISTA 3: CALENDARIO 21 DÍAS (SCREENSHOT 3) -->
+  <!-- VISTA 3: CALENDARIO ELEGANTE (CÍRCULOS LIMPIOS SIN 'D' REDUNDANTE) -->
   <!-- ============================================================================== -->
-  <main id="view-calendario" class="app-view hidden space-y-4">
+  <main id="view-calendario" class="app-view hidden space-y-3">
     <div class="flex items-center justify-between">
-      <h2 class="text-lg font-black tracking-wider text-[#2C2621] uppercase flex items-center gap-1.5">
+      <h2 class="text-base font-black tracking-wider text-[#2C2621] uppercase flex items-center gap-1.5">
         Calendario <i class="ph-bold ph-calendar text-olive-600"></i>
       </h2>
       <span class="text-[10px] font-bold text-olive-700 bg-olive-100 border border-olive-200 px-2.5 py-0.5 rounded-full">Automático</span>
     </div>
 
-    <div class="bg-[#FAF7F2] border border-sand-200 rounded-[28px] p-5 shadow-sm space-y-4">
-      <div class="flex items-center justify-between text-xs font-bold text-[#5C4F3D] px-1">
-        <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+    <div class="bg-[#FAF8F5] border border-sand-200 rounded-[28px] p-4 shadow-sm space-y-3">
+      <div class="grid grid-cols-7 text-center text-xs font-bold text-[#5C4F3D] pb-1">
+        <span>D</span><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span>
       </div>
 
-      <div id="calendarGrid" class="grid grid-cols-7 gap-2">
-        <!-- Días generados dinámicamente -->
+      <!-- Cuadrícula limpia con números elegantes -->
+      <div id="calendarGrid" class="grid grid-cols-7 gap-1.5 text-center">
+        <!-- Render dinámico -->
       </div>
 
       <div class="pt-3 border-t border-sand-200 flex items-center justify-between text-[11px] text-[#7A6E60]">
@@ -381,7 +392,7 @@ tailwind.config = {
         </div>
         <div class="flex items-center gap-1.5">
           <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-          <span>Hoy en curso</span>
+          <span>Hoy</span>
         </div>
         <div class="flex items-center gap-1.5">
           <span class="w-2.5 h-2.5 rounded-full bg-sand-200"></span>
@@ -390,12 +401,36 @@ tailwind.config = {
       </div>
     </div>
 
-    <div class="bg-white border border-sand-200 rounded-[24px] p-4 shadow-sm space-y-3">
-      <div class="flex items-start gap-3">
+    <!-- Hitos Clínicos del Tratamiento (Estilo Exacto del Mockup) -->
+    <div class="bg-[#FAF8F5] border border-sand-200 rounded-[24px] p-4 shadow-sm space-y-3">
+      <h3 class="text-xs font-black uppercase tracking-wider text-[#5C4F3D] flex items-center gap-1.5">
+        <i class="ph-bold ph-list-checks text-olive-600"></i> Hitos del Protocolo (21 Días)
+      </h3>
+      <div class="space-y-2.5 text-xs relative pl-3 border-l-2 border-olive-200 ml-1">
+        <div class="relative">
+          <div class="w-2 h-2 rounded-full bg-olive-600 absolute -left-[17px] top-1"></div>
+          <p class="font-extrabold text-[#2C2621]">Día 1: Inicio Antibiótico Doxiciclina</p>
+          <p class="text-[10px] text-[#7A6E60]">Con comida blanda. Protección gástrica con Omeprazol.</p>
+        </div>
+        <div class="relative">
+          <div class="w-2 h-2 rounded-full bg-cyan-600 absolute -left-[17px] top-1"></div>
+          <p class="font-extrabold text-[#2C2621]">Diario: Hidratación Subcutánea (120 cc/día)</p>
+          <p class="text-[10px] text-[#7A6E60]">6 aplicaciones de 20 cc cada 4 horas.</p>
+        </div>
+        <div class="relative">
+          <div class="w-2 h-2 rounded-full bg-amber-600 absolute -left-[17px] top-1"></div>
+          <p class="font-extrabold text-[#2C2621]">Día 21: Conclusión Ciclo Ehrlichiosis</p>
+          <p class="text-[10px] text-[#7A6E60]">Evaluación clínica y hematología con el Dr. José Marcano.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white border border-sand-200 rounded-2xl p-3.5 shadow-sm space-y-2">
+      <div class="flex items-start gap-2.5">
         <div class="w-2.5 h-2.5 rounded-full bg-olive-600 mt-1 shrink-0"></div>
         <div>
-          <h4 class="text-xs font-black text-[#2C2621]">Seguimiento Automático de Días</h4>
-          <p class="text-[10px] text-[#7A6E60]">Los días se marcan automáticamente al completar las tomas del día.</p>
+          <h4 class="text-xs font-black text-[#2C2621]">Seguimiento Automático</h4>
+          <p class="text-[10px] text-[#7A6E60]">El día se guarda como completado al administrar todas las tomas programadas.</p>
         </div>
       </div>
       <div class="flex items-center justify-between pt-2 border-t border-sand-100">
@@ -406,50 +441,50 @@ tailwind.config = {
   </main>
 
   <!-- ============================================================================== -->
-  <!-- VISTA 4: PERFIL DEL PERRO CON FOTO (SCREENSHOT 4) -->
+  <!-- VISTA 4: PERFIL DEL PERRO (HERO CARD CON FOTO) -->
   <!-- ============================================================================== -->
-  <main id="view-perfil" class="app-view hidden space-y-4">
+  <main id="view-perfil" class="app-view hidden space-y-3">
     
-    <div class="bg-[#C7DCA7] border-2 border-olive-500/30 rounded-[32px] p-6 shadow-sm text-center relative overflow-hidden">
+    <div class="bg-[#C7DCA7] border-2 border-olive-500/30 rounded-[32px] p-5 shadow-sm text-center relative overflow-hidden">
       
       <!-- Marco Avatar con foto real del perro -->
-      <div class="w-28 h-28 mx-auto rounded-3xl bg-[#FAF7F2] p-1 border-4 border-[#3D572B] shadow-md mb-3 flex items-center justify-center overflow-hidden">
+      <div class="w-26 h-26 mx-auto rounded-3xl bg-[#FAF8F5] p-1 border-4 border-[#3D572B] shadow-md mb-2.5 flex items-center justify-center overflow-hidden">
         <div id="profilePhotoContainer" class="w-full h-full rounded-2xl bg-gradient-to-b from-[#E2ECD8] to-[#C7DCA7] flex items-center justify-center text-5xl text-[#3D572B] overflow-hidden">
           <i class="ph-fill ph-dog"></i>
         </div>
       </div>
 
-      <h3 id="profileDogName" class="text-2xl font-black text-[#2F4321]">Sultán</h3>
+      <h3 id="profileDogName" class="text-xl font-black text-[#2F4321]">Sultán</h3>
       <p id="profileDogBreed" class="text-xs font-semibold text-[#3D572B]">Canino · Paciente en Cuidados</p>
 
-      <div class="grid grid-cols-2 gap-3 mt-4 pt-3 border-t border-olive-600/20 text-center">
+      <div class="grid grid-cols-2 gap-2 mt-3 pt-2.5 border-t border-olive-600/20 text-center">
         <div>
           <span class="text-[10px] text-[#3D572B] font-bold uppercase tracking-wider block">Edad</span>
-          <span id="profileDogAge" class="text-base font-black text-[#2F4321]">5 años</span>
+          <span id="profileDogAge" class="text-sm font-black text-[#2F4321]">5 años</span>
         </div>
         <div>
           <span class="text-[10px] text-[#3D572B] font-bold uppercase tracking-wider block">Peso</span>
-          <span id="profileDogWeight" class="text-base font-black text-[#2F4321]">25 kg</span>
+          <span id="profileDogWeight" class="text-sm font-black text-[#2F4321]">25 kg</span>
         </div>
       </div>
 
-      <div class="space-y-2 mt-4">
-        <div id="profileDogAllergies" class="bg-[#4E6E38] text-white text-[10px] font-black uppercase tracking-wider py-1.5 px-4 rounded-xl shadow-sm">
+      <div class="space-y-1.5 mt-3">
+        <div id="profileDogAllergies" class="bg-[#4E6E38] text-white text-[10px] font-black uppercase tracking-wider py-1.5 px-3 rounded-xl shadow-sm">
           ALERGIAS / REGLA: Lácteos (Inactiva Doxiciclina)
         </div>
-        <div id="profileDogCondition" class="bg-[#3D572B] text-white text-[10px] font-black uppercase tracking-wider py-1.5 px-4 rounded-xl shadow-sm">
-          CONDICIÓN: Ehrlichia 21 Días
+        <div id="profileDogCondition" class="bg-[#3D572B] text-white text-[10px] font-black uppercase tracking-wider py-1.5 px-3 rounded-xl shadow-sm">
+          CONDICIÓN: Ehrlichiosis 21 Días
         </div>
       </div>
 
       <!-- Tarjeta Vet de Emergencia inferior -->
-      <div class="bg-white/95 rounded-2xl p-3.5 mt-4 text-left flex items-center justify-between shadow-sm border border-olive-600/20">
+      <div class="bg-white/95 rounded-2xl p-3 mt-3 text-left flex items-center justify-between shadow-sm border border-olive-600/20">
         <div>
           <span class="text-[9px] font-black text-[#7A6E60] uppercase tracking-wider block">MÉDICO VETERINARIO</span>
           <span class="text-xs font-black text-[#2C2621]">Dr. José Marcano</span>
           <span class="text-[11px] font-mono font-bold text-olive-700 block">0416-9957400</span>
         </div>
-        <a href="tel:04169957400" class="w-10 h-10 rounded-xl bg-olive-600 text-white flex items-center justify-center text-lg active:scale-95 transition shadow-sm">
+        <a href="tel:04169957400" class="w-9 h-9 rounded-xl bg-olive-600 text-white flex items-center justify-center text-base active:scale-95 transition shadow-sm">
           <i class="ph-bold ph-phone-call"></i>
         </a>
       </div>
@@ -458,7 +493,7 @@ tailwind.config = {
     <!-- Botones de Gestión de Perros -->
     <div class="grid grid-cols-2 gap-2">
       <button onclick="openAddDogModal()" class="py-3 bg-olive-600 hover:bg-olive-700 text-white font-extrabold text-xs rounded-2xl flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition">
-        <i class="ph-bold ph-plus-circle text-base"></i> + Agregar Otro Perro
+        <i class="ph-bold ph-plus-circle text-base"></i> + Agregar Perro
       </button>
       <button onclick="openEditCurrentDogModal()" class="py-3 bg-white border border-sand-200 text-[#5C4F3D] font-bold text-xs rounded-2xl flex items-center justify-center gap-1.5 hover:bg-sand-100 transition">
         <i class="ph-bold ph-pencil-simple text-base"></i> Editar Foto y Datos
@@ -467,11 +502,11 @@ tailwind.config = {
   </main>
 
   <!-- ============================================================================== -->
-  <!-- VISTA 5: COMIDA Y RUTINA CON ICONO OMEPRAZOL (SCREENSHOT 5) -->
+  <!-- VISTA 5: COMIDA Y RUTINA CON ICONO OMEPRAZOL DESTACADO -->
   <!-- ============================================================================== -->
-  <main id="view-comida" class="app-view hidden space-y-4">
+  <main id="view-comida" class="app-view hidden space-y-3">
     <div class="flex items-center justify-between">
-      <h2 class="text-lg font-black tracking-wider text-[#2C2621] uppercase flex items-center gap-1.5">
+      <h2 class="text-base font-black tracking-wider text-[#2C2621] uppercase flex items-center gap-1.5">
         Comida y Rutina <i class="ph-bold ph-bowl-food text-olive-600"></i>
       </h2>
     </div>
@@ -480,23 +515,23 @@ tailwind.config = {
     <div class="space-y-2.5">
       <h3 class="text-xs font-black text-[#7A6E60] uppercase tracking-wider">Protección Gástrica & Dieta</h3>
       
-      <!-- Tarjeta Omeprazol con icono específico -->
-      <div class="bg-white border-2 border-emerald-500/30 rounded-2xl p-3.5 shadow-sm space-y-1.5">
+      <!-- Tarjeta Omeprazol con icono de escudo protector -->
+      <div class="bg-white border-2 border-emerald-500/30 rounded-2xl p-3.5 shadow-sm">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-xl shrink-0">
             <i class="ph-bold ph-shield-check"></i>
           </div>
           <div>
-            <div class="flex items-center gap-1.5">
+            <div class="flex items-center gap-1.5 mb-0.5">
               <span class="text-[9px] font-black uppercase text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded">En Ayunas</span>
               <h4 class="font-extrabold text-xs text-[#2C2621]">Omeprazol (Protector Gástrico)</h4>
             </div>
-            <p class="text-[11px] text-[#7A6E60]">1 tableta a las 08:00 AM · Previene gastritis del antibiótico.</p>
+            <p class="text-[11px] text-[#7A6E60]">1 tableta a las 08:00 AM · Protege el estómago antes de la Doxiciclina.</p>
           </div>
         </div>
       </div>
 
-      <div class="bg-white border border-sand-200 rounded-2xl p-3.5 shadow-sm space-y-2">
+      <div class="bg-white border border-sand-200 rounded-2xl p-3.5 shadow-sm space-y-1.5">
         <div class="flex justify-between items-center text-xs font-bold text-[#2C2621]">
           <span>Pollo hervido + arroz blanco suave</span>
           <span class="text-olive-700">Comida blanda</span>
@@ -508,9 +543,9 @@ tailwind.config = {
       </div>
     </div>
 
-    <div class="space-y-2.5 pt-2">
+    <div class="space-y-2.5 pt-1">
       <h3 class="text-xs font-black text-[#7A6E60] uppercase tracking-wider">Bienestar y Signos</h3>
-      <div class="bg-white border border-sand-200 rounded-2xl p-3.5 shadow-sm space-y-2">
+      <div class="bg-white border border-sand-200 rounded-2xl p-3.5 shadow-sm space-y-1.5">
         <div class="flex justify-between items-center">
           <span class="text-xs font-bold text-[#2C2621] flex items-center gap-1.5">
             <i class="ph-bold ph-drop text-cyan-600"></i> Suero Subcutáneo Hoy
@@ -521,23 +556,51 @@ tailwind.config = {
           <div id="sueroProgressBar" class="bg-cyan-600 h-full w-0 transition-all duration-500 rounded-full"></div>
         </div>
       </div>
+
+      <!-- Paseos y necesidades -->
+      <div class="bg-white border border-sand-200 rounded-2xl p-3.5 shadow-sm flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-olive-100 text-olive-700 flex items-center justify-center text-base shrink-0">
+            <i class="ph-bold ph-person-simple-walk"></i>
+          </div>
+          <div>
+            <span class="text-xs font-bold text-[#2C2621] block">Paseos Cortos / Micción</span>
+            <span class="text-[10px] text-[#7A6E60]">Salidas breves para orinar sin agotar al paciente.</span>
+          </div>
+        </div>
+        <span class="text-xs font-black text-olive-700 bg-olive-50 border border-olive-200 px-2 py-1 rounded-xl">3x hoy</span>
+      </div>
+
+      <!-- Estado y Ánimo -->
+      <div class="bg-white border border-sand-200 rounded-2xl p-3.5 shadow-sm flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-base shrink-0">
+            <i class="ph-bold ph-smiley"></i>
+          </div>
+          <div>
+            <span class="text-xs font-bold text-[#2C2621] block">Estado de Ánimo & Apetito</span>
+            <span class="text-[10px] text-[#7A6E60]">Alerta, comiendo bien, mucosas rosadas.</span>
+          </div>
+        </div>
+        <span class="text-xs font-black text-emerald-800 bg-emerald-100 px-2 py-1 rounded-xl">Estable</span>
+      </div>
     </div>
   </main>
 
   <!-- ============================================================================== -->
-  <!-- VISTA 6: BOTVET MEJORADO CON PREGUNTAS ASISTIDAS DINÁMICAS -->
+  <!-- VISTA 6: BOTVET MEJORADO -->
   <!-- ============================================================================== -->
   <main id="view-ia" class="app-view hidden space-y-3">
     <div class="flex items-center justify-between">
-      <h2 class="text-lg font-black tracking-wider text-[#2C2621] uppercase flex items-center gap-1.5">
+      <h2 class="text-base font-black tracking-wider text-[#2C2621] uppercase flex items-center gap-1.5">
         BotVET Canino <i class="ph-bold ph-sparkle text-olive-600"></i>
       </h2>
-      <span class="text-[10px] font-bold text-olive-700 bg-olive-100 border border-olive-200 px-2 py-0.5 rounded-full">Asistente Clínico</span>
+      <span class="text-[10px] font-bold text-olive-700 bg-olive-100 border border-olive-200 px-2.5 py-0.5 rounded-full">Asistente Clínico</span>
     </div>
 
-    <div class="bg-white border border-sand-200 rounded-[28px] p-4 shadow-sm flex flex-col h-[540px]">
+    <div class="bg-white border border-sand-200 rounded-[28px] p-4 shadow-sm flex flex-col h-[520px]">
       
-      <div class="pb-3 border-b border-sand-200 space-y-1.5">
+      <div class="pb-2.5 border-b border-sand-200 space-y-1.5">
         <span class="text-[10px] font-black text-[#7A6E60] uppercase tracking-wider block">Preguntas Rápidas Asistidas:</span>
         <div class="grid grid-cols-1 gap-1.5">
           <button onclick="handleBotAction('next_dose')" class="text-left bg-olive-50 hover:bg-olive-100 border border-olive-200 text-olive-800 text-[11px] font-bold py-2 px-3 rounded-xl transition flex items-center justify-between">
@@ -556,6 +619,10 @@ tailwind.config = {
             <span>🚨 ¿Qué hacer si vomitó la dosis de medicamento?</span>
             <i class="ph-bold ph-arrow-right text-xs"></i>
           </button>
+          <button onclick="handleBotAction('diet')" class="text-left bg-sand-100 hover:bg-sand-200 border border-sand-200 text-[#5C4F3D] text-[11px] font-bold py-2 px-3 rounded-xl transition flex items-center justify-between">
+            <span>🍗 ¿Qué dieta puede comer y qué alimentos están prohibidos?</span>
+            <i class="ph-bold ph-arrow-right text-xs"></i>
+          </button>
           <button onclick="handleBotAction('whatsapp_report')" class="text-left bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-800 text-[11px] font-bold py-2 px-3 rounded-xl transition flex items-center justify-between">
             <span>📲 Generar y Enviar Reporte a mi WhatsApp (0412-3504829)</span>
             <i class="ph-bold ph-whatsapp-logo text-xs"></i>
@@ -568,7 +635,7 @@ tailwind.config = {
           <div class="w-7 h-7 rounded-xl bg-olive-100 text-olive-700 flex items-center justify-center shrink-0 text-sm mt-0.5">
             <i class="ph-bold ph-sparkle"></i>
           </div>
-          <div class="bg-[#FAF7F2] border border-sand-200 rounded-2xl p-3 max-w-[90%] text-[#2C2621] leading-relaxed">
+          <div class="bg-[#FAF8F5] border border-sand-200 rounded-2xl p-3 max-w-[90%] text-[#2C2621] leading-relaxed">
             <strong class="block text-olive-700 mb-1">¡Hola! Soy BotVET 🐾</strong>
             Puedo informarte qué medicamento le toca a cualquiera de tus perros, para qué sirve o preparar el reporte para tu WhatsApp. Toca una opción arriba.
           </div>
@@ -583,7 +650,7 @@ tailwind.config = {
 <!-- ============================================================================== -->
 <!-- BOTTOM NAVIGATION BAR -->
 <!-- ============================================================================== -->
-<nav class="fixed bottom-0 inset-x-0 z-50 bg-[#FAF7F2]/95 border-t border-sand-200 backdrop-blur-md safe-bottom shadow-lg">
+<nav class="fixed bottom-0 inset-x-0 z-50 bg-[#FAF8F5]/95 border-t border-sand-200 backdrop-blur-md safe-bottom shadow-lg">
   <div class="max-w-md mx-auto grid grid-cols-6 py-2 px-1 text-center">
     
     <button onclick="switchTab('cronograma')" id="nav-cronograma" class="nav-btn active flex flex-col items-center justify-center py-1 text-olive-700">
@@ -630,14 +697,30 @@ const SUPABASE_CONFIG = {
   anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdsYnhxY2JjanVkenh4cWF3YmhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4Nzc3NjUsImV4cCI6MjA5MzQ1Mzc2NX0.2VW5APQcbGKpFYfqF0-6LMN5Xmu5qoAqVwV5a4Pq0Lg'
 };
 
-const STORAGE_KEY = 'sultan-multidog-v2';
+const STORAGE_KEY = 'sultan-multidog-v4';
+
+function cleanText(s){
+  if(!s || typeof s !== 'string') return '';
+  return s
+    .replace(/\uFFFD/g, '')
+    .replace(//g, '')
+    .replace(/Hidratacin/g, 'Hidratación')
+    .replace(/subcutnea/g, 'subcutánea')
+    .replace(/Subcutneo/g, 'Subcutáneo')
+    .replace(/gstrico/g, 'gástrico')
+    .replace(/Antibtico/g, 'Antibiótico')
+    .replace(/heptico/g, 'hepático')
+    .replace(/hepatico/g, 'hepático')
+    .replace(/Sultn/g, 'Sultán')
+    .trim();
+}
 
 let state = {
-  selectedDogId: 'all', // 'all' o ID del perro seleccionado
+  selectedDogId: 'all',
   dogs: [
-    { id: 'dog-sultan', name: 'Sultán', breed: 'Canino', age: '5 años', weight: '25 kg', allergies: 'Lácteos (Inactiva Doxiciclina)', condition: 'Ehrlichiosis 21 Días', photo_url: null }
+    { id: 'dog-sultan', name: 'Sultán', breed: 'Canino', age: '5 años', weight: '6,5 kg', allergies: 'Lácteos (Inactiva Doxiciclina)', condition: 'Ehrlichiosis 21 Días', photo_url: null }
   ],
-  currentDogPhotoData: null, // Base64 temporal al subir foto
+  currentDogPhotoData: null,
   startDate: localDateKey(new Date()),
   medications: [],
   checksByDate: {},
@@ -655,8 +738,27 @@ let realtimeChannel = null;
 function loadState(){
   try {
     const r = localStorage.getItem(STORAGE_KEY);
-    if(r) state = { ...state, ...JSON.parse(r) };
+    if(r){
+      const parsed = JSON.parse(r);
+      state = { ...state, ...parsed };
+    }
   } catch(e){}
+
+  if(state.dogs && Array.isArray(state.dogs)){
+    state.dogs.forEach(d => {
+      d.name = cleanText(d.name);
+      d.breed = cleanText(d.breed);
+      d.allergies = cleanText(d.allergies);
+      d.condition = cleanText(d.condition);
+    });
+  }
+  if(state.medications && Array.isArray(state.medications)){
+    state.medications.forEach(m => {
+      m.name = cleanText(m.name);
+      m.detail = cleanText(m.detail);
+      m.dog_name = cleanText(m.dog_name);
+    });
+  }
 }
 function saveState(){
   try {
@@ -675,7 +777,7 @@ function pad(n){ return String(n).padStart(2,'0'); }
 function formatTime12(d){
   let h=d.getHours(), m=d.getMinutes(), s=d.getSeconds();
   const ap = h>=12?'PM':'AM'; h=h%12; if(h===0)h=12;
-  return `${pad(h)}:${pad(m)}:${pad(s)} ${ap}`;
+  return `${pad(h)}:${pad(m)} ${ap}`;
 }
 function formatHM(d){
   let h=d.getHours(), m=d.getMinutes();
@@ -698,7 +800,7 @@ function getDogNameById(id){
   return d ? d.name : 'Sultán';
 }
 
-function getDogAvatarHTML(dog, sizeClass="w-11 h-11 text-xl"){
+function getDogAvatarHTML(dog, sizeClass="w-10 h-10 text-sm"){
   if(dog && dog.photo_url){
     return `<img src="${dog.photo_url}" alt="${dog.name}" class="${sizeClass} rounded-2xl object-cover border-2 border-olive-600 shadow-sm shrink-0">`;
   }
@@ -861,8 +963,8 @@ function handleDogPhotoUpload(event){
     const img = new Image();
     img.onload = function(){
       const canvas = document.createElement('canvas');
-      const MAX_WIDTH = 280;
-      const MAX_HEIGHT = 280;
+      const MAX_WIDTH = 260;
+      const MAX_HEIGHT = 260;
       let width = img.width;
       let height = img.height;
 
@@ -880,7 +982,6 @@ function handleDogPhotoUpload(event){
       const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.82);
       state.currentDogPhotoData = compressedDataUrl;
 
-      // Actualizar vista previa en el modal
       document.getElementById('dogPhotoPreview').innerHTML = `<img src="${compressedDataUrl}" class="w-full h-full object-cover">`;
     };
     img.src = e.target.result;
@@ -888,7 +989,7 @@ function handleDogPhotoUpload(event){
   reader.readAsDataURL(file);
 }
 
-/* ============ GESTIÓN MULTI-PERRO (CRUD) ============ */
+/* ============ GESTIÓN MULTI-PERRO ============ */
 function renderDogChips(){
   const c = document.getElementById('dogChipsContainer'); if(!c) return;
 
@@ -1033,7 +1134,6 @@ function updateProfileView(){
   document.getElementById('profileDogAllergies').textContent = `ALERGIAS / REGLA: ${dog.allergies || 'Ninguna'}`;
   document.getElementById('profileDogCondition').textContent = `CONDICIÓN: ${dog.condition || 'Tratamiento activo'}`;
 
-  // Avatar grande en perfil
   const photoBox = document.getElementById('profilePhotoContainer');
   if(photoBox){
     if(dog.photo_url){
@@ -1043,7 +1143,6 @@ function updateProfileView(){
     }
   }
 
-  // Avatar en Header
   const hdrAvatar = document.getElementById('hdrDogAvatar');
   if(hdrAvatar){
     if(state.selectedDogId !== 'all' && dog.photo_url){
@@ -1164,7 +1263,7 @@ async function deleteMedication(id, name){
   }
 }
 
-/* ============ RENDER CRONOGRAMA CON FOTOS REALES (SCREENSHOT 2) ============ */
+/* ============ RENDER CRONOGRAMA: BOTÓN A LA DERECHA (SIN SOBREPOSICIÓN) ============ */
 function isChecked(dk, id){ return !!(state.checksByDate[dk] && state.checksByDate[dk][id]); }
 function getDoseMeta(dk, id){ return state.checksByDate[dk]?.[id] || null; }
 
@@ -1242,43 +1341,49 @@ function renderTimeline(){
     const isLate = isPast && !checked;
     
     const dog = getDogById(dose.dog_id) || { name: dose.dog_name || 'Sultán', photo_url: null };
-    const avatarHTML = getDogAvatarHTML(dog, "w-11 h-11 text-base");
+    const avatarHTML = getDogAvatarHTML(dog, "w-10 h-10 text-xs");
 
-    let subText = `${dose.dose} · ${dose.detail || ''}`;
+    const doseName = cleanText(dose.name);
+    const dogName = cleanText(dog.name);
+
+    let subText = `${dose.dose} · ${cleanText(dose.detail)}`;
     if(checked && meta && typeof meta === 'object' && meta.takenAt){
       const takenTime = formatHM(new Date(meta.takenAt));
-      subText = `Administrado a las ${takenTime} por ${meta.by || 'Familiar'}`;
+      subText = `Administrado a las ${takenTime}`;
     }
 
     return `
-      <div class="flex items-start gap-4">
-        <div class="w-14 text-right pt-2 shrink-0">
+      <div class="flex items-center gap-2.5 sm:gap-3 relative">
+        <!-- Hora a la izquierda con punto de cronograma -->
+        <div class="w-13 sm:w-14 text-right shrink-0">
           <span class="text-xs font-mono font-black ${isLate ? 'text-amber-700' : 'text-[#2C2621]'} block leading-none">${timeStr}</span>
-          <span class="text-[9px] font-bold text-[#7A6E60]">${parseInt(timeStr) >= 12 ? 'PM' : 'AM'}</span>
+          <span class="text-[9px] font-bold text-[#7A6E60] uppercase">${parseInt(timeStr) >= 12 ? 'PM' : 'AM'}</span>
         </div>
 
-        <div class="flex-1 bg-white border ${checked ? 'border-olive-200 bg-olive-50/40' : isLate ? 'border-amber-300' : 'border-sand-200'} rounded-[24px] p-3 sm:p-4 shadow-sm flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <!-- Tarjeta Horizontal con Botón a la Derecha (Exacto al Mockup) -->
+        <div class="flex-1 bg-white border ${checked ? 'border-olive-300 bg-[#F2F6ED]/60' : isLate ? 'border-amber-300 bg-amber-50/20' : 'border-sand-200'} rounded-2xl p-2.5 sm:p-3 shadow-sm flex items-center justify-between gap-2.5 min-w-0 transition hover:border-olive-300">
           
-          <div class="flex items-center gap-3">
+          <div class="flex items-center gap-2.5 min-w-0 flex-1">
             ${avatarHTML}
-            <div class="min-w-0">
-              <div class="flex items-center gap-2">
-                <span class="text-[10px] font-black uppercase text-[#4E6E38] tracking-wider">${dog.name}</span>
-                <h4 class="font-black text-sm text-[#2C2621] truncate">${dose.name}</h4>
-                ${isLate ? '<span class="text-[8px] font-black bg-amber-100 text-amber-800 border border-amber-300 px-1.5 py-0.5 rounded">ATRASADO</span>' : ''}
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-1.5 mb-0.5 flex-wrap">
+                <span class="text-[9px] font-black uppercase text-[#3D572B] bg-[#E2ECD8] border border-olive-200/60 px-1.5 py-0.5 rounded-full shrink-0">🐾 ${dogName}</span>
+                ${isLate ? '<span class="text-[8px] font-black bg-amber-100 border border-amber-300 text-amber-900 px-1.5 py-0.5 rounded-full shrink-0">ATRASADO</span>' : ''}
               </div>
-              <p class="text-[11px] text-[#7A6E60] truncate">${subText}</p>
+              <h4 class="font-bold text-xs sm:text-sm text-[#2C2621] truncate leading-tight">${doseName}</h4>
+              <p class="text-[10px] sm:text-[11px] text-[#7A6E60] truncate mt-0.5">${subText}</p>
             </div>
           </div>
 
+          <!-- Botón Lateral Compacto a la Derecha -->
           <button onclick="markDose('${dose.id}', ${!checked})"
-                  class="px-4 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 ${
+                  class="px-3.5 py-2 rounded-xl font-bold text-xs shrink-0 flex items-center gap-1.5 transition active:scale-95 shadow-sm ${
                     checked 
-                      ? 'bg-[#4E6E38] text-white shadow-sm' 
-                      : 'bg-[#FAF7F2] border border-sand-300 text-[#5C4F3D] hover:bg-olive-100 hover:text-olive-700'
+                      ? 'bg-[#4E6E38] text-white hover:bg-olive-700' 
+                      : 'bg-sand-100 hover:bg-olive-100 border border-sand-300 text-[#5C4F3D] hover:text-olive-800'
                   }">
-            <i class="ph-bold ${checked ? 'ph-check-bold' : 'ph-circle'} text-base"></i>
-            <span>${checked ? 'Administrado' : 'Administrar'}</span>
+            <i class="ph-bold ${checked ? 'ph-check-bold' : 'ph-circle'} text-sm"></i>
+            <span>${checked ? 'Listo' : 'Dar'}</span>
           </button>
         </div>
       </div>
@@ -1286,6 +1391,7 @@ function renderTimeline(){
   }).join('');
 }
 
+/* ============ RENDER INVENTARIO (LIMPIO, SIN SOBREPOSICIONES) ============ */
 function renderMedsList(){
   const c = document.getElementById('medsListContainer'); if(!c) return;
 
@@ -1294,36 +1400,74 @@ function renderMedsList(){
     medsToShow = state.medications.filter(m => (m.dog_id || 'dog-sultan') === state.selectedDogId);
   }
 
+  if(medsToShow.length === 0){
+    c.innerHTML = '<div class="text-center py-8 text-xs text-[#7A6E60]">No hay fármacos registrados para este perro. Toca el botón "+ Agregar Fármaco" para añadir uno.</div>';
+    return;
+  }
+
   c.innerHTML = medsToShow.map(med => {
-    const timeStr = med.scheduled_time || med.time;
+    const timeStr = med.scheduled_time || med.time || '08:00';
     const dog = getDogById(med.dog_id) || { name: med.dog_name || 'Sultán', photo_url: null };
-    const avatarMini = dog.photo_url 
-      ? `<img src="${dog.photo_url}" class="w-4 h-4 rounded-full object-cover">`
-      : '🐾';
+    const medName = cleanText(med.name);
+    const medDetail = cleanText(med.detail);
+    const dogName = cleanText(dog.name);
+
+    const isOmeprazol = medName.toLowerCase().includes('omeprazol') || med.id === 'ome';
+    const isSyringe = med.med_type === 'syringe' || med.type === 'syringe' || medName.toLowerCase().includes('suero');
+    const isLiquid = med.med_type === 'liquid' || med.type === 'liquid';
+
+    const iconClass = isOmeprazol 
+      ? 'ph-shield-check text-emerald-700' 
+      : isSyringe 
+        ? 'ph-syringe text-cyan-700' 
+        : isLiquid 
+          ? 'ph-flask text-amber-700' 
+          : 'ph-capsule text-olive-700';
+
+    const iconBg = isOmeprazol 
+      ? 'bg-emerald-50 border-emerald-200' 
+      : isSyringe 
+        ? 'bg-cyan-50 border-cyan-200' 
+        : isLiquid 
+          ? 'bg-amber-50 border-amber-200' 
+          : 'bg-olive-50 border-olive-200';
 
     return `
-      <div class="bg-white border border-sand-200 rounded-2xl p-4 shadow-sm flex items-center justify-between gap-3">
-        <div class="flex items-center gap-3 min-w-0">
-          <div class="w-11 h-11 rounded-xl bg-olive-50 border border-olive-100 flex items-center justify-center text-olive-600 text-xl shrink-0">
-            <i class="ph-bold ${med.med_type === 'syringe' ? 'ph-syringe' : med.med_type === 'liquid' ? 'ph-flask' : 'ph-capsule'}"></i>
-          </div>
-          <div class="min-w-0">
-            <div class="flex items-center gap-1.5">
-              <span class="text-[9px] font-black uppercase text-olive-800 bg-olive-100 px-1.5 py-0.5 rounded flex items-center gap-1">
-                ${avatarMini} ${dog.name}
-              </span>
-              <h4 class="font-extrabold text-sm text-[#2C2621] truncate">${med.name}</h4>
-            </div>
-            <p class="text-[11px] text-[#7A6E60] font-semibold">${med.dose} · ${timeStr}</p>
-            <p class="text-[10px] text-olive-700 truncate">${med.detail || ''}</p>
-          </div>
+      <div class="bg-white border border-sand-200 rounded-2xl p-3 sm:p-3.5 shadow-sm flex items-center justify-between gap-3 transition hover:border-olive-300">
+        <!-- Icono con marco temático -->
+        <div class="w-11 h-11 rounded-2xl ${iconBg} border flex items-center justify-center text-xl shrink-0 shadow-inner">
+          <i class="ph-bold ${iconClass}"></i>
         </div>
 
-        <div class="flex items-center gap-1 shrink-0">
-          <button onclick="openEditMedModal('${med.id}')" class="w-8 h-8 rounded-lg bg-sand-100 hover:bg-sand-200 text-[#5C4F3D] flex items-center justify-center text-sm transition" title="Editar">
+        <!-- Columna de datos estructurada en filas (CERO SOBREPOSICIÓN) -->
+        <div class="min-w-0 flex-1">
+          <!-- Fila 1: Píldora del perro y hora programada -->
+          <div class="flex items-center gap-1.5 mb-1 flex-wrap">
+            <span class="text-[9px] font-black uppercase text-[#3D572B] bg-[#E2ECD8] border border-olive-200/60 px-2 py-0.5 rounded-full shrink-0 flex items-center gap-1">
+              🐾 ${dogName}
+            </span>
+            <span class="text-[10px] font-mono font-bold text-[#5C4F3D] bg-sand-100 border border-sand-200 px-2 py-0.5 rounded-md shrink-0 flex items-center gap-1">
+              <i class="ph-bold ph-clock text-[10px] text-olive-700"></i> ${timeStr}
+            </span>
+            ${isOmeprazol ? '<span class="text-[9px] font-bold text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded-full">Protector Gástrico</span>' : ''}
+          </div>
+
+          <!-- Fila 2: Nombre del fármaco limpio y bold -->
+          <h4 class="font-extrabold text-sm text-[#2C2621] truncate leading-tight">${medName}</h4>
+
+          <!-- Fila 3: Dosis y notas clínicas -->
+          <p class="text-xs text-[#5C4F3D] font-semibold mt-0.5 truncate">
+            <span class="text-olive-700 font-bold">${med.dose}</span>
+            ${medDetail ? `<span class="text-[11px] font-normal text-[#7A6E60]"> · ${medDetail}</span>` : ''}
+          </p>
+        </div>
+
+        <!-- Botones de Acción (Editar y Eliminar) -->
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button onclick="openEditMedModal('${med.id}')" class="w-8 h-8 rounded-xl bg-sand-100 hover:bg-sand-200 text-[#5C4F3D] flex items-center justify-center text-sm transition active:scale-95 shadow-sm" title="Editar Fármaco">
             <i class="ph-bold ph-pencil-simple"></i>
           </button>
-          <button onclick="deleteMedication('${med.id}', '${med.name}')" class="w-8 h-8 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 flex items-center justify-center text-sm transition" title="Eliminar">
+          <button onclick="deleteMedication('${med.id}', '${medName}')" class="w-8 h-8 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-100 text-rose-700 flex items-center justify-center text-sm transition active:scale-95 shadow-sm" title="Eliminar Fármaco">
             <i class="ph-bold ph-trash"></i>
           </button>
         </div>
@@ -1332,6 +1476,7 @@ function renderMedsList(){
   }).join('');
 }
 
+/* ============ RENDER CALENDARIO ELEGANTE (SIN 'D' REPETIDA) ============ */
 function renderCalendar(){
   const grid = document.getElementById('calendarGrid'); if(!grid) return;
   const start = new Date(state.startDate+'T00:00:00');
@@ -1350,10 +1495,9 @@ function renderCalendar(){
     else if(isToday) bgCls = 'bg-[#C48243] border-[#7D5533] text-white font-black animate-pulse';
 
     html.push(`
-      <div class="aspect-square rounded-2xl border ${bgCls} flex flex-col items-center justify-center text-xs font-bold relative">
-        <span class="text-[8px] opacity-70">D</span>
+      <div class="aspect-square rounded-xl border ${bgCls} flex flex-col items-center justify-center text-xs font-bold relative transition">
         <span class="text-sm leading-none font-black">${i+1}</span>
-        ${isComplete ? '<span class="w-1.5 h-1.5 rounded-full bg-white absolute bottom-1"></span>' : ''}
+        ${isComplete ? '<span class="w-1 h-1 rounded-full bg-white absolute bottom-1"></span>' : ''}
       </div>
     `);
   }
@@ -1397,7 +1541,7 @@ function updateClock(){
 
 function updateNextDose(){
   const now = new Date(), nowMin = minutesOfDay(now);
-  let next=null;
+  let next = null;
   for(const dose of state.medications){
     const dm = parseTime(dose.scheduled_time || dose.time);
     if(dm > nowMin && (!next || dm < parseTime(next.scheduled_time || next.time))) next = dose;
@@ -1408,12 +1552,16 @@ function updateNextDose(){
     next = state.medications[0];
     target = timeToDate(next.scheduled_time || next.time); target.setDate(target.getDate()+1);
   }
-  const el = document.getElementById('nextDoseCount');
-  if(el && next && target){
+  
+  const textEl = document.getElementById('nextDoseText');
+  const countEl = document.getElementById('nextDoseCountdown');
+  if(next && target){
     const diff = target - now;
     const h = Math.floor(diff/3600000), m = Math.floor((diff%3600000)/60000);
-    const dogName = next.dog_name || getDogNameById(next.dog_id);
-    el.textContent = `${pad(h)}h ${pad(m)}m (${dogName}: ${next.name})`;
+    const dogName = cleanText(next.dog_name || getDogNameById(next.dog_id));
+    const medName = cleanText(next.name);
+    if(textEl) textEl.textContent = `${medName} (${dogName})`;
+    if(countEl) countEl.textContent = `En ${pad(h)}h ${pad(m)}m`;
   }
 }
 
@@ -1442,7 +1590,7 @@ function appendBotMessage(role, text){
   const icon = isUser ? 'ph-user' : 'ph-sparkle';
   const bubbleStyle = isUser
     ? 'bg-[#4E6E38] text-white rounded-2xl p-3 max-w-[85%] text-xs'
-    : 'bg-[#FAF7F2] border border-sand-200 rounded-2xl p-3 max-w-[90%] text-[#2C2621] text-xs leading-relaxed';
+    : 'bg-[#FAF8F5] border border-sand-200 rounded-2xl p-3 max-w-[90%] text-[#2C2621] text-xs leading-relaxed';
 
   div.innerHTML = `
     <div class="w-6 h-6 rounded-lg ${iconBg} flex items-center justify-center shrink-0 text-xs mt-0.5">
@@ -1468,11 +1616,13 @@ function handleBotAction(actionKey){
 
     if(nextPending){
       const timeStr = nextPending.scheduled_time || nextPending.time;
-      const dogName = nextPending.dog_name || getDogNameById(nextPending.dog_id);
+      const dogName = cleanText(nextPending.dog_name || getDogNameById(nextPending.dog_id));
+      const medName = cleanText(nextPending.name);
+      const detail = cleanText(nextPending.detail);
       const resp = `👉 <strong>Paciente:</strong> 🐾 <strong>${dogName}</strong><br/>` +
-                   `💊 <strong>Fármaco:</strong> <strong>${nextPending.name}</strong> (${nextPending.dose})<br/>` +
+                   `💊 <strong>Fármaco:</strong> <strong>${medName}</strong> (${nextPending.dose})<br/>` +
                    `⏰ <strong>Horario:</strong> ${timeStr}<br/>` +
-                   `📋 <strong>Función:</strong> ${nextPending.detail || 'Tratamiento asignado según protocolo'}.`;
+                   `📋 <strong>Función:</strong> ${detail || 'Tratamiento asignado según protocolo'}.`;
       appendBotMessage('assistant', resp);
     } else {
       appendBotMessage('assistant', '🎉 ¡Al día! Todos los medicamentos programados para hoy ya fueron administrados.');
@@ -1484,9 +1634,11 @@ function handleBotAction(actionKey){
     let resp = `📋 <strong>Fármacos activos (${state.medications.length}):</strong><br/><br/>`;
     state.medications.forEach(m => {
       const isDone = isChecked(dk, m.id);
-      const dogName = m.dog_name || getDogNameById(m.dog_id);
-      resp += `${isDone ? '✅' : '⏳'} <strong>[${dogName}] ${m.scheduled_time || m.time} - ${m.name}</strong> (${m.dose})<br/>` +
-              `<span class="text-[#7A6E60]">${m.detail || 'Sin nota'}</span><br/><br/>`;
+      const dogName = cleanText(m.dog_name || getDogNameById(m.dog_id));
+      const medName = cleanText(m.name);
+      const detail = cleanText(m.detail);
+      resp += `${isDone ? '✅' : '⏳'} <strong>[${dogName}] ${m.scheduled_time || m.time} - ${medName}</strong> (${m.dose})<br/>` +
+              `<span class="text-[#7A6E60]">${detail || 'Sin nota'}</span><br/><br/>`;
     });
     appendBotMessage('assistant', resp);
   }
@@ -1511,6 +1663,15 @@ function handleBotAction(actionKey){
     appendBotMessage('assistant', resp);
   }
 
+  else if(actionKey === 'diet'){
+    appendBotMessage('user', '¿Qué comida puede comer y cuáles están prohibidas?');
+    const resp = `🍗 <strong>Alimentación y Nutrición Canina:</strong><br/>` +
+                 `• <strong>Permitido:</strong> Pechuga de pollo hervida, caldo de pollo sin grasa, arroz blanco suave cocido.<br/>` +
+                 `• <strong>Regla de oro:</strong> CERO sal, CERO ajo, CERO cebolla, CERO condimentos.<br/>` +
+                 `• <strong>PROHIBICIÓN ESTRICTA:</strong> Cero lácteos (leche, queso, mantequilla, yogur). El calcio inactiva la Doxiciclina y arruina el tratamiento contra la Ehrlichiosis.`;
+    appendBotMessage('assistant', resp);
+  }
+
   else if(actionKey === 'whatsapp_report'){
     appendBotMessage('user', 'Generar y enviar reporte por WhatsApp');
     sendQuickWhatsAppReport();
@@ -1531,10 +1692,10 @@ function sendQuickWhatsAppReport(){
     const dogMeds = state.medications.filter(m => (m.dog_id || 'dog-sultan') === dog.id);
     if(dogMeds.length > 0){
       const checkedCount = dogMeds.filter(m => isChecked(dk, m.id)).length;
-      msg += `🐶 *${dog.name}* (${dog.breed || 'Canino'}) - ${checkedCount}/${dogMeds.length} tomas:\n`;
+      msg += `🐶 *${cleanText(dog.name)}* (${cleanText(dog.breed) || 'Canino'}) - ${checkedCount}/${dogMeds.length} tomas:\n`;
       dogMeds.forEach(m => {
         const isDone = isChecked(dk, m.id);
-        msg += `  ${isDone ? '✅' : '⏳'} ${m.scheduled_time || m.time} - ${m.name} (${m.dose})\n`;
+        msg += `  ${isDone ? '✅' : '⏳'} ${m.scheduled_time || m.time} - ${cleanText(m.name)} (${m.dose})\n`;
       });
       msg += `\n`;
     }
@@ -1585,6 +1746,12 @@ async function syncFromSupabase(){
     // 1. Cargar Perros con fotos
     const { data: dogs } = await supabaseClient.from('sultan_dogs').select('*');
     if(dogs && dogs.length > 0){
+      dogs.forEach(d => {
+        d.name = cleanText(d.name);
+        d.breed = cleanText(d.breed);
+        d.allergies = cleanText(d.allergies);
+        d.condition = cleanText(d.condition);
+      });
       state.dogs = dogs;
     }
 
@@ -1596,6 +1763,11 @@ async function syncFromSupabase(){
       .order('scheduled_time', { ascending: true });
 
     if(meds && meds.length > 0){
+      meds.forEach(m => {
+        m.name = cleanText(m.name);
+        m.detail = cleanText(m.detail);
+        m.dog_name = cleanText(m.dog_name);
+      });
       state.medications = meds;
     }
 

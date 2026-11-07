@@ -47,10 +47,8 @@ Instrucciones para tus respuestas:
 - Firma o recuerda amablemente la supervisión del Dr. José Marcano cuando sea pertinente.
 `.trim();
 
-    // Formatear mensajes para la API de Gemini
     const contents = [];
 
-    // Inyectar el historial de mensajes
     for (const msg of messages) {
       contents.push({
         role: msg.role === 'assistant' ? 'model' : 'user',
