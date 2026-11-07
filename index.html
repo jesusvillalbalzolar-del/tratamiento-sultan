@@ -6,9 +6,9 @@
 <meta name="theme-color" content="#F4EFE6">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Sultán">
+<meta name="apple-mobile-web-app-title" content="Tratamiento Canino">
 <meta name="mobile-web-app-capable" content="yes">
-<title>Tratamiento Sultán · Panel Médico & IA</title>
+<title>Tratamiento Canino · Panel Multi-Perros & IA</title>
 
 <!-- Tailwind & Phosphor Icons -->
 <script src="https://cdn.tailwindcss.com"></script>
@@ -59,12 +59,12 @@ tailwind.config = {
 <body class="min-h-full bg-[#F4EFE6] text-[#2C2621] antialiased selection:bg-olive-200">
 
 <!-- ============================================================================== -->
-<!-- BANNER DE PERMISOS DE ALARMA / NOTIFICACIÓN (SI ESTÁN PENDIENTES) -->
+<!-- BANNER PERMISOS DE ALARMA -->
 <!-- ============================================================================== -->
 <div id="notifBanner" class="bg-amber-100 border-b border-amber-300 text-amber-900 px-4 py-2.5 flex items-center justify-between text-xs sticky top-0 z-[80] shadow-sm">
   <div class="flex items-center gap-2">
     <i class="ph-bold ph-bell-ringing text-amber-700 text-base animate-bounce"></i>
-    <span><strong>Activa las alarmas:</strong> Permite avisos sonoros y en pantalla.</span>
+    <span><strong>Activa las alarmas:</strong> Avisos sonoros y en pantalla para los tratamientos.</span>
   </div>
   <button onclick="requestNotifications()" class="px-3 py-1 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-bold rounded-lg text-[11px] shadow-sm transition">
     Activar
@@ -72,14 +72,15 @@ tailwind.config = {
 </div>
 
 <!-- ============================================================================== -->
-<!-- MODAL ALARMA MEDICACIÓN CON SONIDO FUERTE -->
+<!-- MODAL ALARMA MEDICACIÓN -->
 <!-- ============================================================================== -->
 <div id="alarmModal" class="fixed inset-0 z-[100] bg-black/70 backdrop-blur-md hidden items-center justify-center p-4">
-  <div class="bg-[#FAF7F2] border-2 border-olive-500 rounded-[32px] p-6 sm:p-8 max-w-sm w-full shadow-2xl text-center relative overflow-hidden safe-bottom animate-bounce-short">
+  <div class="bg-[#FAF7F2] border-2 border-olive-500 rounded-[32px] p-6 sm:p-8 max-w-sm w-full shadow-2xl text-center relative overflow-hidden safe-bottom">
     <div class="w-20 h-20 bg-olive-100 text-olive-700 rounded-full mx-auto flex items-center justify-center text-4xl mb-4 shadow-inner animate-ring">
       <i class="ph-bold ph-bell-ringing"></i>
     </div>
     <span class="inline-block text-[10px] font-black tracking-widest text-olive-700 uppercase bg-olive-200 px-3 py-1 rounded-full mb-2">⏰ HORA DE LA TOMA</span>
+    <p id="modalDogName" class="text-xs font-black text-olive-800 uppercase tracking-wider mb-1">🐾 Sultán</p>
     <h3 id="modalDoseName" class="text-2xl font-black text-[#2C2621] mb-1">—</h3>
     <p id="modalDoseTime" class="text-olive-700 font-mono font-black text-lg mb-1">--:--</p>
     <p id="modalDoseDetail" class="text-[#6A6055] text-xs mb-6 font-medium">—</p>
@@ -96,7 +97,68 @@ tailwind.config = {
 </div>
 
 <!-- ============================================================================== -->
-<!-- MODAL CRUD: AGREGAR / EDITAR FÁRMACO -->
+<!-- MODAL CRUD: AGREGAR / EDITAR PERRO -->
+<!-- ============================================================================== -->
+<div id="dogModal" class="fixed inset-0 z-[96] bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
+  <div class="bg-[#FAF7F2] border border-sand-300 rounded-[32px] p-6 max-w-sm w-full shadow-2xl relative">
+    <div class="flex items-center justify-between mb-4">
+      <h3 id="dogModalTitle" class="text-base font-black text-[#2C2621] flex items-center gap-2">
+        <i class="ph-bold ph-dog text-olive-600"></i> Registrar Nuevo Perro
+      </h3>
+      <button onclick="closeDogModal()" class="w-8 h-8 rounded-full bg-sand-100 hover:bg-sand-200 text-[#5C4F3D] flex items-center justify-center">
+        <i class="ph-bold ph-x"></i>
+      </button>
+    </div>
+
+    <form onsubmit="handleSaveDog(event)" class="space-y-3">
+      <input type="hidden" id="dogFormId">
+      
+      <div>
+        <label class="block text-[10px] font-bold text-[#7A6E60] uppercase mb-1">Nombre del Perro</label>
+        <input type="text" id="dogFormName" required placeholder="Ej: Sultán, Max, Bella" class="w-full bg-white border border-sand-200 rounded-xl px-3 py-2 text-xs text-[#2C2621] focus:outline-none focus:border-olive-600 font-bold">
+      </div>
+
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="block text-[10px] font-bold text-[#7A6E60] uppercase mb-1">Raza / Tipo</label>
+          <input type="text" id="dogFormBreed" placeholder="Ej: Golden Retriever" class="w-full bg-white border border-sand-200 rounded-xl px-3 py-2 text-xs text-[#2C2621] focus:outline-none focus:border-olive-600">
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-[#7A6E60] uppercase mb-1">Peso</label>
+          <input type="text" id="dogFormWeight" placeholder="Ej: 25 kg" class="w-full bg-white border border-sand-200 rounded-xl px-3 py-2 text-xs text-[#2C2621] focus:outline-none focus:border-olive-600">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="block text-[10px] font-bold text-[#7A6E60] uppercase mb-1">Edad</label>
+          <input type="text" id="dogFormAge" placeholder="Ej: 4 años" class="w-full bg-white border border-sand-200 rounded-xl px-3 py-2 text-xs text-[#2C2621] focus:outline-none focus:border-olive-600">
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-[#7A6E60] uppercase mb-1">Tratamiento / Diagnóstico</label>
+          <input type="text" id="dogFormCondition" placeholder="Ej: Ehrlichia 21 días" class="w-full bg-white border border-sand-200 rounded-xl px-3 py-2 text-xs text-[#2C2621] focus:outline-none focus:border-olive-600">
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-[10px] font-bold text-[#7A6E60] uppercase mb-1">Alergias o Reglas Especiales</label>
+        <input type="text" id="dogFormAllergies" placeholder="Ej: Cero lácteos con la Doxi, Pollo..." class="w-full bg-white border border-sand-200 rounded-xl px-3 py-2 text-xs text-[#2C2621] focus:outline-none focus:border-olive-600">
+      </div>
+
+      <div class="pt-2 flex gap-2">
+        <button type="submit" class="flex-1 py-3 bg-olive-600 hover:bg-olive-700 active:scale-95 text-white font-extrabold text-xs rounded-xl shadow-sm transition">
+          Guardar Perro en BD
+        </button>
+        <button type="button" onclick="closeDogModal()" class="px-4 py-3 bg-sand-100 hover:bg-sand-200 text-[#5C4F3D] font-bold text-xs rounded-xl transition">
+          Cancelar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============================================================================== -->
+<!-- MODAL CRUD: AGREGAR / EDITAR FÁRMACO (ASOCIADO A UN PERRO) -->
 <!-- ============================================================================== -->
 <div id="medModal" class="fixed inset-0 z-[95] bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
   <div class="bg-[#FAF7F2] border border-sand-300 rounded-[32px] p-6 max-w-sm w-full shadow-2xl relative">
@@ -111,6 +173,13 @@ tailwind.config = {
 
     <form onsubmit="handleSaveMedication(event)" class="space-y-3">
       <input type="hidden" id="medFormId">
+
+      <div>
+        <label class="block text-[10px] font-bold text-[#7A6E60] uppercase mb-1">Asignar al Perro</label>
+        <select id="medFormDogId" required class="w-full bg-white border border-sand-200 rounded-xl px-3 py-2 text-xs text-[#2C2621] font-bold focus:outline-none focus:border-olive-600">
+          <!-- Opciones dinámicas de perros -->
+        </select>
+      </div>
       
       <div>
         <label class="block text-[10px] font-bold text-[#7A6E60] uppercase mb-1">Nombre del Medicamento</label>
@@ -139,12 +208,12 @@ tailwind.config = {
 
       <div>
         <label class="block text-[10px] font-bold text-[#7A6E60] uppercase mb-1">¿Para qué sirve? / Instrucciones</label>
-        <textarea id="medFormDetail" rows="2" placeholder="Ej: Antibiótico principal. Dar siempre con comida. Cero lácteos." class="w-full bg-white border border-sand-200 rounded-xl px-3 py-2 text-xs text-[#2C2621] focus:outline-none focus:border-olive-600"></textarea>
+        <textarea id="medFormDetail" rows="2" placeholder="Ej: Antibiótico principal. Dar siempre con comida." class="w-full bg-white border border-sand-200 rounded-xl px-3 py-2 text-xs text-[#2C2621] focus:outline-none focus:border-olive-600"></textarea>
       </div>
 
       <div class="pt-2 flex gap-2">
         <button type="submit" class="flex-1 py-3 bg-olive-600 hover:bg-olive-700 active:scale-95 text-white font-extrabold text-xs rounded-xl shadow-sm transition">
-          Guardar en Base de Datos
+          Guardar Fármaco en BD
         </button>
         <button type="button" onclick="closeMedModal()" class="px-4 py-3 bg-sand-100 hover:bg-sand-200 text-[#5C4F3D] font-bold text-xs rounded-xl transition">
           Cancelar
@@ -160,14 +229,14 @@ tailwind.config = {
 <div class="max-w-md mx-auto min-h-screen flex flex-col safe-top pb-24 px-4 sm:px-0">
 
   <!-- TOP BAR / HEADER -->
-  <header class="py-2.5 flex items-center justify-between border-b border-sand-200 mb-3">
+  <header class="py-2.5 flex items-center justify-between border-b border-sand-200 mb-2">
     <div class="flex items-center gap-2.5">
-      <div class="w-10 h-10 rounded-2xl bg-olive-600 text-white flex items-center justify-center text-xl shadow-sm">
+      <div class="w-10 h-10 rounded-2xl bg-olive-600 text-white flex items-center justify-center text-xl shadow-sm shrink-0">
         <i class="ph-bold ph-paw-print"></i>
       </div>
       <div>
         <div class="flex items-center gap-2">
-          <h1 class="text-base font-black tracking-tight text-[#2C2621]">Sultán</h1>
+          <h1 class="text-base font-black tracking-tight text-[#2C2621]" id="hdrDogTitle">Panel Canino</h1>
           <span class="text-[9px] font-extrabold bg-olive-100 text-olive-700 border border-olive-200 px-2 py-0.5 rounded-full">
             Día <span id="hdrDayNumber">1</span> de 21
           </span>
@@ -179,7 +248,6 @@ tailwind.config = {
       </div>
     </div>
 
-    <!-- Quick Audio & Alarm Test -->
     <div class="flex items-center gap-1.5">
       <button onclick="testAlarm()" title="Probar Alarma Sonora" class="w-8 h-8 rounded-xl bg-sand-100 hover:bg-sand-200 border border-sand-200 text-[#5C4F3D] flex items-center justify-center text-sm transition">
         <i class="ph-bold ph-speaker-high"></i>
@@ -193,8 +261,13 @@ tailwind.config = {
     </div>
   </header>
 
+  <!-- SELECTOR MULTI-PERROS EN LA CABECERA (IGUAL AL SCREENSHOT DE VARIOS PERROS) -->
+  <div class="py-2 flex items-center gap-2 overflow-x-auto no-scrollbar border-b border-sand-200/70 mb-3" id="dogChipsContainer">
+    <!-- Píldoras de perros dinámicas -->
+  </div>
+
   <!-- ============================================================================== -->
-  <!-- VISTA 1: CRONOGRAMA (TIMELINE VERTICAL CON AVATAR ESTILO SCREENSHOT) -->
+  <!-- VISTA 1: CRONOGRAMA MULTI-PERRO (EXACTAMENTE COMO SCREENSHOT 2) -->
   <!-- ============================================================================== -->
   <main id="view-cronograma" class="app-view space-y-4">
     <div class="flex items-center justify-between">
@@ -207,15 +280,15 @@ tailwind.config = {
       </div>
     </div>
 
-    <!-- Barra de progreso diario (Se actualiza y guarda automáticamente) -->
+    <!-- Progreso del día -->
     <div class="bg-white/80 border border-sand-200 rounded-2xl p-3 shadow-sm flex items-center justify-between gap-3">
       <div class="flex items-center gap-2.5">
         <div class="w-9 h-9 rounded-xl bg-olive-100 text-olive-700 flex items-center justify-center text-lg">
           <i class="ph-bold ph-pill"></i>
         </div>
         <div>
-          <span class="text-[10px] text-[#7A6E60] font-semibold block uppercase">Progreso de hoy</span>
-          <span id="statProgressText" class="text-xs font-extrabold text-[#2C2621]">0 de 10 completadas</span>
+          <span class="text-[10px] text-[#7A6E60] font-semibold block uppercase">Tomas de hoy</span>
+          <span id="statProgressText" class="text-xs font-extrabold text-[#2C2621]">0 completadas</span>
         </div>
       </div>
       <div class="w-28 text-right">
@@ -226,18 +299,18 @@ tailwind.config = {
       </div>
     </div>
 
-    <!-- Lista de tomas con línea vertical conectora (Estilo exacto screenshot 2) -->
+    <!-- Timeline vertical con línea conectora y avatares por perro -->
     <div class="relative pl-3">
       <div class="absolute left-10 top-6 bottom-6 w-0.5 bg-[#DCCFBA]"></div>
       <div id="timelineContainer" class="space-y-4 relative">
-        <!-- Render dinámico desde Supabase -->
+        <!-- Render dinámico -->
       </div>
     </div>
 
-    <!-- Botón WhatsApp Directo al número del usuario (04123504829) -->
+    <!-- Botón WhatsApp Directo al 0412-3504829 -->
     <div class="pt-2 flex gap-2">
       <button onclick="sendQuickWhatsAppReport()" class="flex-1 py-3.5 bg-[#4E6E38] hover:bg-olive-700 active:scale-95 text-white font-extrabold text-xs rounded-2xl shadow-sm flex items-center justify-center gap-2 transition">
-        <i class="ph-bold ph-whatsapp-logo text-base"></i> Enviar Reporte a mi WhatsApp (0412-3504829)
+        <i class="ph-bold ph-whatsapp-logo text-base"></i> Enviar Reporte a WhatsApp (0412-3504829)
       </button>
       <button onclick="resetToday()" class="px-4 py-3.5 bg-white border border-sand-200 text-[#7A6E60] hover:text-amber-700 font-bold text-xs rounded-2xl transition" title="Reiniciar tomas de hoy">
         <i class="ph-bold ph-arrows-counter-clockwise"></i>
@@ -246,7 +319,7 @@ tailwind.config = {
   </main>
 
   <!-- ============================================================================== -->
-  <!-- VISTA 2: INVENTARIO & CRUD FÁRMACOS (SCREENSHOT 1) -->
+  <!-- VISTA 2: INVENTARIO FÁRMACOS CON CRUD (SCREENSHOT 1) -->
   <!-- ============================================================================== -->
   <main id="view-inventario" class="app-view hidden space-y-4">
     <div class="flex items-center justify-between">
@@ -258,12 +331,10 @@ tailwind.config = {
       </button>
     </div>
 
-    <!-- Lista dinámica de Fármacos con botones Editar y Eliminar (CRUD) -->
     <div id="medsListContainer" class="space-y-3">
-      <!-- Generado dinámicamente desde Supabase -->
+      <!-- Generado dinámicamente -->
     </div>
 
-    <!-- Botón Agregar Medicamento grande inferior estilo screenshot 1 -->
     <button onclick="openAddMedModal()" class="w-full py-3.5 bg-[#4E6E38] hover:bg-olive-700 active:scale-95 text-white font-extrabold text-xs rounded-2xl shadow-sm flex items-center justify-center gap-2 transition">
       <i class="ph-bold ph-plus-circle text-base"></i> + Agregar Medicamento a la Base de Datos
     </button>
@@ -292,11 +363,11 @@ tailwind.config = {
       <div class="pt-3 border-t border-sand-200 flex items-center justify-between text-[11px] text-[#7A6E60]">
         <div class="flex items-center gap-1.5">
           <span class="w-2.5 h-2.5 rounded-full bg-olive-600"></span>
-          <span>Día Completado</span>
+          <span>Completado</span>
         </div>
         <div class="flex items-center gap-1.5">
           <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-          <span>Hoy en curso</span>
+          <span>Hoy</span>
         </div>
         <div class="flex items-center gap-1.5">
           <span class="w-2.5 h-2.5 rounded-full bg-sand-200"></span>
@@ -309,12 +380,12 @@ tailwind.config = {
       <div class="flex items-start gap-3">
         <div class="w-2.5 h-2.5 rounded-full bg-olive-600 mt-1 shrink-0"></div>
         <div>
-          <h4 class="text-xs font-black text-[#2C2621]">Seguimiento Automático de Días</h4>
+          <h4 class="text-xs font-black text-[#2C2621]">Seguimiento Automático</h4>
           <p class="text-[10px] text-[#7A6E60]">Los días se marcan automáticamente al completar las tomas del día.</p>
         </div>
       </div>
       <div class="flex items-center justify-between pt-2 border-t border-sand-100">
-        <span class="text-xs font-bold text-[#2C2621]">Fecha de Inicio:</span>
+        <span class="text-xs font-bold text-[#2C2621]">Inicio del Tratamiento:</span>
         <input type="date" id="startDateInput" class="bg-sand-100 border border-sand-200 rounded-lg px-2 py-1 text-xs font-bold text-[#2C2621]">
       </div>
     </div>
@@ -324,6 +395,8 @@ tailwind.config = {
   <!-- VISTA 4: PERFIL DEL PERRO (SCREENSHOT 4) -->
   <!-- ============================================================================== -->
   <main id="view-perfil" class="app-view hidden space-y-4">
+    
+    <!-- Tarjeta Verde Principal con Foto de Perro (Idéntico a Screenshot 4) -->
     <div class="bg-[#C7DCA7] border-2 border-olive-500/30 rounded-[32px] p-6 shadow-sm text-center relative overflow-hidden">
       
       <div class="w-28 h-28 mx-auto rounded-3xl bg-[#FAF7F2] p-1.5 border-4 border-[#3D572B] shadow-md mb-3 flex items-center justify-center overflow-hidden">
@@ -332,30 +405,30 @@ tailwind.config = {
         </div>
       </div>
 
-      <h3 class="text-2xl font-black text-[#2F4321]">Sultán</h3>
-      <p class="text-xs font-semibold text-[#3D572B]">Canino · Cuidados Médicos Domiciliarios</p>
+      <h3 id="profileDogName" class="text-2xl font-black text-[#2F4321]">Sultán</h3>
+      <p id="profileDogBreed" class="text-xs font-semibold text-[#3D572B]">Canino</p>
 
       <div class="grid grid-cols-2 gap-3 mt-4 pt-3 border-t border-olive-600/20 text-center">
         <div>
-          <span class="text-[10px] text-[#3D572B] font-bold uppercase tracking-wider block">Tratamiento</span>
-          <span class="text-base font-black text-[#2F4321]">21 Días</span>
+          <span class="text-[10px] text-[#3D572B] font-bold uppercase tracking-wider block">Edad</span>
+          <span id="profileDogAge" class="text-base font-black text-[#2F4321]">5 años</span>
         </div>
         <div>
-          <span class="text-[10px] text-[#3D572B] font-bold uppercase tracking-wider block">WhatsApp Reportes</span>
-          <span class="text-xs font-black text-[#2F4321]">0412-3504829</span>
+          <span class="text-[10px] text-[#3D572B] font-bold uppercase tracking-wider block">Peso</span>
+          <span id="profileDogWeight" class="text-base font-black text-[#2F4321]">25 kg</span>
         </div>
       </div>
 
       <div class="space-y-2 mt-4">
-        <div class="bg-[#4E6E38] text-white text-[10px] font-black uppercase tracking-wider py-1.5 px-4 rounded-xl shadow-sm">
-          REGLA ESTRICTA: CERO LÁCTEOS CON DOXICICLINA
+        <div id="profileDogAllergies" class="bg-[#4E6E38] text-white text-[10px] font-black uppercase tracking-wider py-1.5 px-4 rounded-xl shadow-sm">
+          ALERGIAS: Lácteos (Inactiva Doxiciclina)
         </div>
-        <div class="bg-[#3D572B] text-white text-[10px] font-black uppercase tracking-wider py-1.5 px-4 rounded-xl shadow-sm">
-          HIDRATACIÓN: 20 CC SUERO CADA 4 HORAS
+        <div id="profileDogCondition" class="bg-[#3D572B] text-white text-[10px] font-black uppercase tracking-wider py-1.5 px-4 rounded-xl shadow-sm">
+          CONDICIÓN: Ehrlichia 21 Días
         </div>
       </div>
 
-      <!-- Tarjeta Vet de Emergencia -->
+      <!-- Tarjeta Vet de Emergencia inferior -->
       <div class="bg-white/95 rounded-2xl p-3.5 mt-4 text-left flex items-center justify-between shadow-sm border border-olive-600/20">
         <div>
           <span class="text-[9px] font-black text-[#7A6E60] uppercase tracking-wider block">MÉDICO VETERINARIO</span>
@@ -366,6 +439,16 @@ tailwind.config = {
           <i class="ph-bold ph-phone-call"></i>
         </a>
       </div>
+    </div>
+
+    <!-- Botones de Gestión de Perros -->
+    <div class="grid grid-cols-2 gap-2">
+      <button onclick="openAddDogModal()" class="py-3 bg-olive-600 hover:bg-olive-700 text-white font-extrabold text-xs rounded-2xl flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition">
+        <i class="ph-bold ph-plus-circle text-base"></i> + Agregar Otro Perro
+      </button>
+      <button onclick="openEditCurrentDogModal()" class="py-3 bg-white border border-sand-200 text-[#5C4F3D] font-bold text-xs rounded-2xl flex items-center justify-center gap-1.5 hover:bg-sand-100 transition">
+        <i class="ph-bold ph-pencil-simple text-base"></i> Editar Datos
+      </button>
     </div>
   </main>
 
@@ -389,14 +472,12 @@ tailwind.config = {
         <div class="w-full bg-sand-100 h-2 rounded-full overflow-hidden border border-sand-200">
           <div class="bg-olive-600 h-full w-[80%] rounded-full"></div>
         </div>
-        <p class="text-[10px] text-[#7A6E60]">Sin sal, sin ajo, sin cebolla. Dividir en raciones pequeñas.</p>
+        <p class="text-[10px] text-[#7A6E60]">Sin sal, sin ajo, sin cebolla. Raciones pequeñas.</p>
       </div>
     </div>
 
     <div class="space-y-2.5 pt-2">
       <h3 class="text-xs font-black text-[#7A6E60] uppercase tracking-wider">Bienestar y Signos</h3>
-
-      <!-- Barra Suero -->
       <div class="bg-white border border-sand-200 rounded-2xl p-3.5 shadow-sm space-y-2">
         <div class="flex justify-between items-center">
           <span class="text-xs font-bold text-[#2C2621] flex items-center gap-1.5">
@@ -408,48 +489,23 @@ tailwind.config = {
           <div id="sueroProgressBar" class="bg-cyan-600 h-full w-0 transition-all duration-500 rounded-full"></div>
         </div>
       </div>
-
-      <!-- Selectores de Bienestar -->
-      <div class="grid grid-cols-2 gap-2">
-        <div class="bg-white border border-sand-200 rounded-2xl p-3 shadow-sm">
-          <span class="text-[10px] font-bold text-[#7A6E60] uppercase block mb-1">Apetito</span>
-          <select id="logAppetite" onchange="saveClinicalLogDraft()" class="w-full bg-sand-100 border border-sand-200 rounded-xl px-2 py-1 text-xs text-[#2C2621] font-semibold focus:outline-none">
-            <option value="5">⭐⭐⭐⭐⭐ Excelente</option>
-            <option value="4">⭐⭐⭐⭐ Bueno</option>
-            <option value="3" selected>⭐⭐⭐ Regular</option>
-            <option value="2">⭐⭐ Bajo</option>
-            <option value="1">⭐ Nulo</option>
-          </select>
-        </div>
-
-        <div class="bg-white border border-sand-200 rounded-2xl p-3 shadow-sm">
-          <span class="text-[10px] font-bold text-[#7A6E60] uppercase block mb-1">Ánimo</span>
-          <select id="logEnergy" onchange="saveClinicalLogDraft()" class="w-full bg-sand-100 border border-sand-200 rounded-xl px-2 py-1 text-xs text-[#2C2621] font-semibold focus:outline-none">
-            <option value="Activo">Activo</option>
-            <option value="Tranquilo">Tranquilo</option>
-            <option value="Decaído" selected>Decaído</option>
-            <option value="Muy débil">Muy débil</option>
-          </select>
-        </div>
-      </div>
     </div>
   </main>
 
   <!-- ============================================================================== -->
-  <!-- VISTA 6: BOTVET (SOLO PREGUNTAS ASISTIDAS BASADAS EN LA BASE DE DATOS) -->
+  <!-- VISTA 6: BOTVET (PREGUNTAS ASISTIDAS DINÁMICAS BASADAS EN LA BD) -->
   <!-- ============================================================================== -->
   <main id="view-ia" class="app-view hidden space-y-3">
     <div class="flex items-center justify-between">
       <h2 class="text-lg font-black tracking-wider text-[#2C2621] uppercase flex items-center gap-1.5">
-        BotVET Sultán <i class="ph-bold ph-sparkle text-olive-600"></i>
+        BotVET Canino <i class="ph-bold ph-sparkle text-olive-600"></i>
       </h2>
       <span class="text-[10px] font-bold text-olive-700 bg-olive-100 border border-olive-200 px-2 py-0.5 rounded-full">Preguntas Guiadas</span>
     </div>
 
     <div class="bg-white border border-sand-200 rounded-[28px] p-4 shadow-sm flex flex-col h-[540px]">
       
-      <!-- Selector de Preguntas Asistidas (Sin escribir a mano) -->
-      <div class="pb-3 border-b border-sand-200 space-y-2">
+      <div class="pb-3 border-b border-sand-200 space-y-1.5">
         <span class="text-[10px] font-black text-[#7A6E60] uppercase tracking-wider block">Toca una pregunta asistida:</span>
         <div class="grid grid-cols-1 gap-1.5">
           <button onclick="handleBotAction('next_dose')" class="text-left bg-olive-50 hover:bg-olive-100 border border-olive-200 text-olive-800 text-[11px] font-bold py-2 px-3 rounded-xl transition flex items-center justify-between">
@@ -457,11 +513,11 @@ tailwind.config = {
             <i class="ph-bold ph-arrow-right text-xs"></i>
           </button>
           <button onclick="handleBotAction('all_meds')" class="text-left bg-sand-100 hover:bg-sand-200 border border-sand-200 text-[#5C4F3D] text-[11px] font-bold py-2 px-3 rounded-xl transition flex items-center justify-between">
-            <span>💊 Ver lista de todos los fármacos de la base de datos</span>
+            <span>💊 Ver lista de fármacos registrados de los perros</span>
             <i class="ph-bold ph-arrow-right text-xs"></i>
           </button>
           <button onclick="handleBotAction('hydration')" class="text-left bg-sand-100 hover:bg-sand-200 border border-sand-200 text-[#5C4F3D] text-[11px] font-bold py-2 px-3 rounded-xl transition flex items-center justify-between">
-            <span>💧 ¿Cómo evaluar si Sultán está deshidratado?</span>
+            <span>💧 ¿Cómo evaluar si el perro está deshidratado?</span>
             <i class="ph-bold ph-arrow-right text-xs"></i>
           </button>
           <button onclick="handleBotAction('vomit')" class="text-left bg-sand-100 hover:bg-sand-200 border border-sand-200 text-[#5C4F3D] text-[11px] font-bold py-2 px-3 rounded-xl transition flex items-center justify-between">
@@ -475,15 +531,14 @@ tailwind.config = {
         </div>
       </div>
 
-      <!-- Historial de Respuestas del BotVET -->
       <div id="aiChatMessages" class="flex-1 overflow-y-auto space-y-3 py-3 pr-1 text-xs">
         <div class="flex items-start gap-2">
           <div class="w-7 h-7 rounded-xl bg-olive-100 text-olive-700 flex items-center justify-center shrink-0 text-sm mt-0.5">
             <i class="ph-bold ph-sparkle"></i>
           </div>
           <div class="bg-[#FAF7F2] border border-sand-200 rounded-2xl p-3 max-w-[90%] text-[#2C2621] leading-relaxed">
-            <strong class="block text-olive-700 mb-1">¡Hola! Soy BotVET Sultán 🐾</strong>
-            Estoy conectado a tu base de datos de Supabase. Toca cualquiera de las opciones de arriba para ver qué medicamento le toca, para qué sirve cada uno o enviar el reporte a tu WhatsApp.
+            <strong class="block text-olive-700 mb-1">¡Hola! Soy BotVET 🐾</strong>
+            Puedo informarte qué medicamento le toca a cualquiera de tus perros, para qué sirve o preparar el reporte para tu WhatsApp. Toca una opción arriba.
           </div>
         </div>
       </div>
@@ -516,7 +571,7 @@ tailwind.config = {
 
     <button onclick="switchTab('perfil')" id="nav-perfil" class="nav-btn flex flex-col items-center justify-center py-1 text-[#7A6E60]">
       <i class="ph-bold ph-dog text-xl mb-0.5"></i>
-      <span class="text-[9px] font-bold">Perfil</span>
+      <span class="text-[9px] font-bold">Perros</span>
     </button>
 
     <button onclick="switchTab('comida')" id="nav-comida" class="nav-btn flex flex-col items-center justify-center py-1 text-[#7A6E60]">
@@ -533,29 +588,32 @@ tailwind.config = {
 </nav>
 
 <!-- ============================================================================== -->
-<!-- JAVASCRIPT: LOGICA, SUPABASE CRUD & ALARMAS REALES -->
+<!-- JAVASCRIPT: LOGICA MULTI-PERRO, SUPABASE CRUD & ALARMAS -->
 <!-- ============================================================================== -->
 <script>
-const USER_WHATSAPP = '584123504829'; // Número del usuario: 04123504829
+const USER_WHATSAPP = '584123504829';
 
 const SUPABASE_CONFIG = {
   url: 'https://glbxqcbcjudzxxqawbhg.supabase.co',
   anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdsYnhxY2JjanVkenh4cWF3YmhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4Nzc3NjUsImV4cCI6MjA5MzQ1Mzc2NX0.2VW5APQcbGKpFYfqF0-6LMN5Xmu5qoAqVwV5a4Pq0Lg'
 };
 
-const STORAGE_KEY = 'sultan-treatment-v6';
+const STORAGE_KEY = 'sultan-multidog-v1';
 
 let state = {
+  selectedDogId: 'all', // 'all' o un id específico
+  dogs: [
+    { id: 'dog-sultan', name: 'Sultán', breed: 'Canino', age: '5 años', weight: '25 kg', allergies: 'Lácteos (Inactiva Doxiciclina)', condition: 'Ehrlichia 21 Días' }
+  ],
   startDate: localDateKey(new Date()),
-  medications: [], // Cargados de Supabase
+  medications: [],
   checksByDate: {},
   completedDays: {},
   firedToday: { date:'', ids:{} },
   snooze: null,
   notificationsEnabled: false,
   muted: false,
-  userName: 'Jesús',
-  clinicalDraft: { appetite: '3', energy: 'Decaído' }
+  userName: 'Jesús'
 };
 
 let supabaseClient = null;
@@ -596,6 +654,11 @@ function dayNumber(){
   const start = new Date(state.startDate+'T00:00:00');
   const now = new Date(); now.setHours(0,0,0,0);
   return Math.max(1, Math.min(21, Math.floor((now-start)/86400000)+1));
+}
+
+function getDogNameById(id){
+  const d = state.dogs.find(x => x.id === id);
+  return d ? d.name : 'Sultán';
 }
 
 /* ============ AUDIO POTENTE Y ALARMAS REALES ============ */
@@ -639,6 +702,9 @@ function triggerAlarm(dose){
   if(currentAlarm) return;
   currentAlarm = dose; ringingStart = Date.now();
   const modal = document.getElementById('alarmModal');
+  const dogName = dose.dog_name || getDogNameById(dose.dog_id);
+
+  document.getElementById('modalDogName').textContent = '🐾 ' + dogName;
   document.getElementById('modalDoseName').textContent = dose.name;
   document.getElementById('modalDoseTime').textContent = formatHM(timeToDate(dose.scheduled_time || dose.time));
   document.getElementById('modalDoseDetail').textContent = `${dose.dose} · ${dose.detail || ''}`;
@@ -654,9 +720,7 @@ function triggerAlarm(dose){
   }, 2600);
 
   if(navigator.vibrate) navigator.vibrate([500, 250, 500, 250, 500]);
-
-  // Notificación real en el teléfono
-  sendDeviceNotification('⏰ Sultán: Hora de ' + dose.name, `${dose.dose} - ${dose.detail || 'Hora de la toma'}`);
+  sendDeviceNotification(`⏰ ${dogName}: Hora de ${dose.name}`, `${dose.dose} - ${dose.detail || ''}`);
 }
 
 function sendDeviceNotification(title, body){
@@ -669,7 +733,7 @@ function sendDeviceNotification(title, body){
             icon: '/favicon.ico',
             vibrate: [300, 150, 300, 150, 500],
             requireInteraction: true,
-            tag: 'sultan-dose'
+            tag: 'dog-dose'
           });
         });
       } else {
@@ -739,80 +803,140 @@ function checkAlarms(){
   }
 }
 
-/* ============ CHECKS Y PROGRESIÓN AUTOMÁTICA ============ */
-function isChecked(dk, id){ return !!(state.checksByDate[dk] && state.checksByDate[dk][id]); }
-function getDoseMeta(dk, id){ return state.checksByDate[dk]?.[id] || null; }
+/* ============ GESTIÓN MULTI-PERRO (CRUD) ============ */
+function renderDogChips(){
+  const c = document.getElementById('dogChipsContainer'); if(!c) return;
 
-async function markDose(id, checked=true){
-  const dk = localDateKey();
-  if(!state.checksByDate[dk]) state.checksByDate[dk] = {};
+  let html = `
+    <button onclick="selectDog('all')" class="px-3 py-1.5 rounded-xl font-bold text-xs whitespace-nowrap transition active:scale-95 ${
+      state.selectedDogId === 'all' 
+        ? 'bg-[#4E6E38] text-white shadow-sm' 
+        : 'bg-white border border-sand-200 text-[#5C4F3D] hover:bg-sand-100'
+    }">
+      🐾 Todos (${state.dogs.length})
+    </button>
+  `;
 
-  if(checked){
-    state.checksByDate[dk][id] = { takenAt: new Date().toISOString(), by: state.userName || 'Familiar' };
-  } else {
-    delete state.checksByDate[dk][id];
-  }
+  state.dogs.forEach(d => {
+    const isSel = state.selectedDogId === d.id;
+    html += `
+      <button onclick="selectDog('${d.id}')" class="px-3 py-1.5 rounded-xl font-bold text-xs whitespace-nowrap transition active:scale-95 ${
+        isSel 
+          ? 'bg-[#4E6E38] text-white shadow-sm' 
+          : 'bg-white border border-sand-200 text-[#5C4F3D] hover:bg-sand-100'
+      }">
+        🐶 ${d.name}
+      </button>
+    `;
+  });
 
-  // Comprobar si se completaron todos los fármacos de hoy para GUARDAR AUTOMÁTICAMENTE EL DÍA
-  const allCompleted = state.medications.length > 0 && state.medications.every(d => isChecked(dk, d.id));
-  if(allCompleted){
-    state.completedDays[dk] = true;
-  } else {
-    delete state.completedDays[dk];
-  }
+  html += `
+    <button onclick="openAddDogModal()" class="px-2.5 py-1.5 rounded-xl bg-olive-100 hover:bg-olive-200 text-olive-800 font-black text-xs whitespace-nowrap border border-olive-200 flex items-center gap-1 transition">
+      <i class="ph-bold ph-plus"></i> Agregar Perro
+    </button>
+  `;
 
+  c.innerHTML = html;
+}
+
+function selectDog(dogId){
+  state.selectedDogId = dogId;
   saveState();
+  renderDogChips();
   renderTimeline();
+  renderMedsList();
   renderCalendar();
+  updateProfileView();
   updateStats();
+}
+
+function openAddDogModal(){
+  document.getElementById('dogModalTitle').innerHTML = '<i class="ph-bold ph-dog text-olive-600"></i> Registrar Nuevo Perro';
+  document.getElementById('dogFormId').value = '';
+  document.getElementById('dogFormName').value = '';
+  document.getElementById('dogFormBreed').value = '';
+  document.getElementById('dogFormWeight').value = '';
+  document.getElementById('dogFormAge').value = '';
+  document.getElementById('dogFormCondition').value = '';
+  document.getElementById('dogFormAllergies').value = '';
+  document.getElementById('dogModal').classList.remove('hidden');
+  document.getElementById('dogModal').classList.add('flex');
+}
+
+function openEditCurrentDogModal(){
+  const currentDogId = state.selectedDogId === 'all' ? state.dogs[0]?.id : state.selectedDogId;
+  const dog = state.dogs.find(d => d.id === currentDogId);
+  if(!dog) return;
+
+  document.getElementById('dogModalTitle').innerHTML = '<i class="ph-bold ph-pencil-simple text-olive-600"></i> Editar Datos de ' + dog.name;
+  document.getElementById('dogFormId').value = dog.id;
+  document.getElementById('dogFormName').value = dog.name;
+  document.getElementById('dogFormBreed').value = dog.breed || '';
+  document.getElementById('dogFormWeight').value = dog.weight || '';
+  document.getElementById('dogFormAge').value = dog.age || '';
+  document.getElementById('dogFormCondition').value = dog.condition || '';
+  document.getElementById('dogFormAllergies').value = dog.allergies || '';
+  document.getElementById('dogModal').classList.remove('hidden');
+  document.getElementById('dogModal').classList.add('flex');
+}
+
+function closeDogModal(){
+  document.getElementById('dogModal').classList.add('hidden');
+  document.getElementById('dogModal').classList.remove('flex');
+}
+
+async function handleSaveDog(e){
+  e.preventDefault();
+  const id = document.getElementById('dogFormId').value || ('dog-' + Date.now());
+  const name = document.getElementById('dogFormName').value.trim();
+  const breed = document.getElementById('dogFormBreed').value.trim() || 'Canino';
+  const weight = document.getElementById('dogFormWeight').value.trim() || '20 kg';
+  const age = document.getElementById('dogFormAge').value.trim() || 'Adulto';
+  const condition = document.getElementById('dogFormCondition').value.trim() || 'En tratamiento';
+  const allergies = document.getElementById('dogFormAllergies').value.trim() || 'Ninguna registrada';
+
+  const dogObj = { id, name, breed, weight, age, condition, allergies };
+
+  const idx = state.dogs.findIndex(d => d.id === id);
+  if(idx >= 0){
+    state.dogs[idx] = dogObj;
+  } else {
+    state.dogs.push(dogObj);
+  }
+
+  state.selectedDogId = id;
+  saveState();
+  closeDogModal();
+  renderDogChips();
+  renderTimeline();
+  updateProfileView();
 
   if(supabaseClient){
     try {
-      const dose = state.medications.find(d=>d.id===id);
-      if(checked){
-        await supabaseClient.from('sultan_dose_logs').upsert({
-          dose_id: id,
-          dose_name: dose ? dose.name : id,
-          log_date: dk,
-          scheduled_time: dose ? (dose.scheduled_time || dose.time) : '00:00',
-          administered_by: state.userName || 'Familiar',
-          taken_at: new Date().toISOString()
-        }, { onConflict: 'dose_id, log_date' });
-      } else {
-        await supabaseClient.from('sultan_dose_logs').delete().match({ dose_id: id, log_date: dk });
-      }
-
-      // Guardar automáticamente el día en Supabase
-      if(allCompleted){
-        await supabaseClient.from('sultan_completed_days').upsert({
-          day_date: dk,
-          day_number: dayNumber()
-        });
-      } else {
-        await supabaseClient.from('sultan_completed_days').delete().match({ day_date: dk });
-      }
+      await supabaseClient.from('sultan_dogs').upsert(dogObj);
     } catch(err){
-      console.warn('Error sincronizando con Supabase:', err);
+      console.warn('Error guardando perro en Supabase:', err);
     }
   }
 }
 
-function resetToday(){
-  if(!confirm('¿Reiniciar las tomas registradas de hoy para Sultán?')) return;
-  const dk = localDateKey();
-  state.checksByDate[dk]={};
-  delete state.completedDays[dk];
-  state.firedToday={ date:dk, ids:{} };
-  state.snooze=null; saveState(); closeAlarm();
-  
-  if(supabaseClient){
-    supabaseClient.from('sultan_dose_logs').delete().eq('log_date', dk).then(()=>{});
-    supabaseClient.from('sultan_completed_days').delete().eq('day_date', dk).then(()=>{});
-  }
-  renderTimeline(); renderCalendar(); updateStats();
+function updateProfileView(){
+  const currentDogId = state.selectedDogId === 'all' ? state.dogs[0]?.id : state.selectedDogId;
+  const dog = state.dogs.find(d => d.id === currentDogId) || state.dogs[0];
+  if(!dog) return;
+
+  document.getElementById('profileDogName').textContent = dog.name;
+  document.getElementById('profileDogBreed').textContent = `${dog.breed} · Paciente en Cuidados`;
+  document.getElementById('profileDogAge').textContent = dog.age || '—';
+  document.getElementById('profileDogWeight').textContent = dog.weight || '—';
+  document.getElementById('profileDogAllergies').textContent = `ALERGIAS / REGLA: ${dog.allergies || 'Ninguna'}`;
+  document.getElementById('profileDogCondition').textContent = `CONDICIÓN: ${dog.condition || 'Tratamiento activo'}`;
+
+  const hdr = document.getElementById('hdrDogTitle');
+  if(hdr) hdr.textContent = state.selectedDogId === 'all' ? 'Panel Canino' : dog.name;
 }
 
-/* ============ CRUD FÁRMACOS (AGREGAR, EDITAR, ELIMINAR) ============ */
+/* ============ CRUD FÁRMACOS ASOCIADOS A PERROS ============ */
 function openAddMedModal(){
   document.getElementById('medModalTitle').innerHTML = '<i class="ph-bold ph-plus-circle text-olive-600"></i> Nuevo Fármaco';
   document.getElementById('medFormId').value = '';
@@ -821,6 +945,13 @@ function openAddMedModal(){
   document.getElementById('medFormTime').value = '12:00';
   document.getElementById('medFormType').value = 'pill';
   document.getElementById('medFormDetail').value = '';
+
+  // Rellenar selector de perros
+  const dogSelect = document.getElementById('medFormDogId');
+  dogSelect.innerHTML = state.dogs.map(d => `
+    <option value="${d.id}" ${state.selectedDogId === d.id ? 'selected' : ''}>🐾 ${d.name}</option>
+  `).join('');
+
   document.getElementById('medModal').classList.remove('hidden');
   document.getElementById('medModal').classList.add('flex');
 }
@@ -835,6 +966,12 @@ function openEditMedModal(id){
   document.getElementById('medFormTime').value = med.scheduled_time || med.time || '08:00';
   document.getElementById('medFormType').value = med.med_type || med.type || 'pill';
   document.getElementById('medFormDetail').value = med.detail || '';
+
+  const dogSelect = document.getElementById('medFormDogId');
+  dogSelect.innerHTML = state.dogs.map(d => `
+    <option value="${d.id}" ${(med.dog_id || 'dog-sultan') === d.id ? 'selected' : ''}>🐾 ${d.name}</option>
+  `).join('');
+
   document.getElementById('medModal').classList.remove('hidden');
   document.getElementById('medModal').classList.add('flex');
 }
@@ -847,6 +984,8 @@ function closeMedModal(){
 async function handleSaveMedication(e){
   e.preventDefault();
   const id = document.getElementById('medFormId').value || ('med-' + Date.now());
+  const dogId = document.getElementById('medFormDogId').value;
+  const dogName = getDogNameById(dogId);
   const name = document.getElementById('medFormName').value.trim();
   const dose = document.getElementById('medFormDose').value.trim();
   const time = document.getElementById('medFormTime').value.trim();
@@ -855,6 +994,8 @@ async function handleSaveMedication(e){
 
   const medObj = {
     id: id,
+    dog_id: dogId,
+    dog_name: dogName,
     name: name,
     dose: dose,
     scheduled_time: time,
@@ -870,7 +1011,6 @@ async function handleSaveMedication(e){
     state.medications.push(medObj);
   }
 
-  // Ordenar por hora
   state.medications.sort((a,b) => parseTime(a.scheduled_time || a.time) - parseTime(b.scheduled_time || b.time));
   saveState();
   closeMedModal();
@@ -904,24 +1044,83 @@ async function deleteMedication(id, name){
   }
 }
 
-/* ============ RENDER CRONOGRAMA ============ */
+/* ============ RENDER CRONOGRAMA CON AVATARES POR PERRO (SCREENSHOT 2) ============ */
+function isChecked(dk, id){ return !!(state.checksByDate[dk] && state.checksByDate[dk][id]); }
+function getDoseMeta(dk, id){ return state.checksByDate[dk]?.[id] || null; }
+
+async function markDose(id, checked=true){
+  const dk = localDateKey();
+  if(!state.checksByDate[dk]) state.checksByDate[dk] = {};
+
+  if(checked){
+    state.checksByDate[dk][id] = { takenAt: new Date().toISOString(), by: state.userName || 'Familiar' };
+  } else {
+    delete state.checksByDate[dk][id];
+  }
+
+  const allCompleted = state.medications.length > 0 && state.medications.every(d => isChecked(dk, d.id));
+  if(allCompleted){
+    state.completedDays[dk] = true;
+  } else {
+    delete state.completedDays[dk];
+  }
+
+  saveState();
+  renderTimeline();
+  renderCalendar();
+  updateStats();
+
+  if(supabaseClient){
+    try {
+      const dose = state.medications.find(d=>d.id===id);
+      if(checked){
+        await supabaseClient.from('sultan_dose_logs').upsert({
+          dose_id: id,
+          dog_id: dose ? (dose.dog_id || 'dog-sultan') : 'dog-sultan',
+          dose_name: dose ? dose.name : id,
+          log_date: dk,
+          scheduled_time: dose ? (dose.scheduled_time || dose.time) : '00:00',
+          administered_by: state.userName || 'Familiar',
+          taken_at: new Date().toISOString()
+        }, { onConflict: 'dose_id, log_date' });
+      } else {
+        await supabaseClient.from('sultan_dose_logs').delete().match({ dose_id: id, log_date: dk });
+      }
+
+      if(allCompleted){
+        await supabaseClient.from('sultan_completed_days').upsert({ day_date: dk, day_number: dayNumber() });
+      } else {
+        await supabaseClient.from('sultan_completed_days').delete().match({ day_date: dk });
+      }
+    } catch(err){
+      console.warn('Error sincronizando con Supabase:', err);
+    }
+  }
+}
+
 function renderTimeline(){
   const c = document.getElementById('timelineContainer'); if(!c) return;
   const dk = localDateKey();
   const nowMin = minutesOfDay();
 
-  if(state.medications.length === 0){
-    c.innerHTML = '<div class="text-center py-8 text-xs text-[#7A6E60]">No hay fármacos configurados. Agrega uno en la pestaña Fármacos.</div>';
+  let medsToShow = state.medications;
+  if(state.selectedDogId !== 'all'){
+    medsToShow = state.medications.filter(m => (m.dog_id || 'dog-sultan') === state.selectedDogId);
+  }
+
+  if(medsToShow.length === 0){
+    c.innerHTML = '<div class="text-center py-8 text-xs text-[#7A6E60]">No hay fármacos programados para este perro. Agrega uno en la pestaña Fármacos.</div>';
     return;
   }
 
-  c.innerHTML = state.medications.map(dose => {
+  c.innerHTML = medsToShow.map(dose => {
     const meta = getDoseMeta(dk, dose.id);
     const checked = !!meta;
     const timeStr = dose.scheduled_time || dose.time;
     const dm = parseTime(timeStr);
     const isPast = dm < nowMin;
     const isLate = isPast && !checked;
+    const dogName = dose.dog_name || getDogNameById(dose.dog_id);
 
     let subText = `${dose.dose} · ${dose.detail || ''}`;
     if(checked && meta && typeof meta === 'object' && meta.takenAt){
@@ -944,6 +1143,7 @@ function renderTimeline(){
             </div>
             <div class="min-w-0">
               <div class="flex items-center gap-2">
+                <span class="text-[10px] font-black uppercase text-[#4E6E38] tracking-wider">${dogName}</span>
                 <h4 class="font-black text-sm text-[#2C2621] truncate">${dose.name}</h4>
                 ${isLate ? '<span class="text-[8px] font-black bg-amber-100 text-amber-800 border border-amber-300 px-1.5 py-0.5 rounded">ATRASADO</span>' : ''}
               </div>
@@ -966,12 +1166,17 @@ function renderTimeline(){
   }).join('');
 }
 
-/* ============ RENDER INVENTARIO (LISTA CON CRUD) ============ */
 function renderMedsList(){
   const c = document.getElementById('medsListContainer'); if(!c) return;
 
-  c.innerHTML = state.medications.map(med => {
+  let medsToShow = state.medications;
+  if(state.selectedDogId !== 'all'){
+    medsToShow = state.medications.filter(m => (m.dog_id || 'dog-sultan') === state.selectedDogId);
+  }
+
+  c.innerHTML = medsToShow.map(med => {
     const timeStr = med.scheduled_time || med.time;
+    const dogName = med.dog_name || getDogNameById(med.dog_id);
     return `
       <div class="bg-white border border-sand-200 rounded-2xl p-4 shadow-sm flex items-center justify-between gap-3">
         <div class="flex items-center gap-3 min-w-0">
@@ -979,7 +1184,10 @@ function renderMedsList(){
             <i class="ph-bold ${med.med_type === 'syringe' ? 'ph-syringe' : med.med_type === 'liquid' ? 'ph-flask' : 'ph-capsule'}"></i>
           </div>
           <div class="min-w-0">
-            <h4 class="font-extrabold text-sm text-[#2C2621] truncate">${med.name}</h4>
+            <div class="flex items-center gap-1.5">
+              <span class="text-[9px] font-black uppercase text-olive-700 bg-olive-100 px-1.5 py-0.5 rounded">${dogName}</span>
+              <h4 class="font-extrabold text-sm text-[#2C2621] truncate">${med.name}</h4>
+            </div>
             <p class="text-[11px] text-[#7A6E60] font-semibold">${med.dose} · ${timeStr}</p>
             <p class="text-[10px] text-olive-700 truncate">${med.detail || ''}</p>
           </div>
@@ -998,7 +1206,6 @@ function renderMedsList(){
   }).join('');
 }
 
-/* ============ RENDER CALENDARIO AUTOMÁTICO ============ */
 function renderCalendar(){
   const grid = document.getElementById('calendarGrid'); if(!grid) return;
   const start = new Date(state.startDate+'T00:00:00');
@@ -1029,16 +1236,18 @@ function renderCalendar(){
   if(inp && !inp.value) inp.value = state.startDate;
 }
 
-/* ============ ESTADÍSTICAS GLOBALES ============ */
 function updateStats(){
   const dk = localDateKey();
-  const total = state.medications.length;
-  const checkedDoses = state.medications.filter(d => isChecked(dk, d.id));
+  let meds = state.medications;
+  if(state.selectedDogId !== 'all'){
+    meds = state.medications.filter(m => (m.dog_id || 'dog-sultan') === state.selectedDogId);
+  }
+
+  const total = meds.length;
+  const checkedDoses = meds.filter(d => isChecked(dk, d.id));
   const checked = checkedDoses.length;
 
-  const day = dayNumber();
-  document.getElementById('hdrDayNumber').textContent = day;
-
+  document.getElementById('hdrDayNumber').textContent = dayNumber();
   const statText = document.getElementById('statProgressText');
   if(statText) statText.textContent = `${checked} de ${total} completadas`;
 
@@ -1077,11 +1286,27 @@ function updateNextDose(){
   if(el && next && target){
     const diff = target - now;
     const h = Math.floor(diff/3600000), m = Math.floor((diff%3600000)/60000);
-    el.textContent = `${pad(h)}h ${pad(m)}m (${next.name})`;
+    const dogName = next.dog_name || getDogNameById(next.dog_id);
+    el.textContent = `${pad(h)}h ${pad(m)}m (${dogName}: ${next.name})`;
   }
 }
 
-/* ============ BOTVET CON PREGUNTAS ASISTIDAS DINÁMICAS ============ */
+function resetToday(){
+  if(!confirm('¿Reiniciar las tomas registradas de hoy?')) return;
+  const dk = localDateKey();
+  state.checksByDate[dk]={};
+  delete state.completedDays[dk];
+  state.firedToday={ date:dk, ids:{} };
+  state.snooze=null; saveState(); closeAlarm();
+  
+  if(supabaseClient){
+    supabaseClient.from('sultan_dose_logs').delete().eq('log_date', dk).then(()=>{});
+    supabaseClient.from('sultan_completed_days').delete().eq('day_date', dk).then(()=>{});
+  }
+  renderTimeline(); renderCalendar(); updateStats();
+}
+
+/* ============ BOTVET MULTI-PERRO ============ */
 function appendBotMessage(role, text){
   const container = document.getElementById('aiChatMessages'); if(!container) return;
   const isUser = role === 'user';
@@ -1110,7 +1335,6 @@ function handleBotAction(actionKey){
   if(actionKey === 'next_dose'){
     appendBotMessage('user', '¿Qué fármaco le toca ahora y para qué sirve?');
     
-    // Buscar la próxima dosis no administrada
     let nextPending = state.medications.find(m => !isChecked(dk, m.id) && parseTime(m.scheduled_time || m.time) >= nowMin);
     if(!nextPending){
       nextPending = state.medications.find(m => !isChecked(dk, m.id));
@@ -1118,22 +1342,24 @@ function handleBotAction(actionKey){
 
     if(nextPending){
       const timeStr = nextPending.scheduled_time || nextPending.time;
-      const resp = `👉 <strong>Próximo Fármaco:</strong> <strong>${nextPending.name}</strong> (${nextPending.dose})<br/>` +
-                   `⏰ <strong>Horario programado:</strong> ${timeStr}<br/>` +
-                   `📋 <strong>¿Para qué es?:</strong> ${nextPending.detail || 'Tratamiento indicado según protocolo'}.<br/><br/>` +
-                   `<em>Recuerda marcarlo como administrado una vez que se lo des a Sultán.</em>`;
+      const dogName = nextPending.dog_name || getDogNameById(nextPending.dog_id);
+      const resp = `👉 <strong>Paciente:</strong> 🐾 <strong>${dogName}</strong><br/>` +
+                   `💊 <strong>Fármaco:</strong> <strong>${nextPending.name}</strong> (${nextPending.dose})<br/>` +
+                   `⏰ <strong>Horario:</strong> ${timeStr}<br/>` +
+                   `📋 <strong>Función:</strong> ${nextPending.detail || 'Tratamiento asignado'}.`;
       appendBotMessage('assistant', resp);
     } else {
-      appendBotMessage('assistant', '🎉 ¡Excelente! Sultán ya tiene todas las tomas programadas de hoy administradas.');
+      appendBotMessage('assistant', '🎉 ¡Al día! Todos los medicamentos programados para hoy ya fueron administrados.');
     }
   }
 
   else if(actionKey === 'all_meds'){
-    appendBotMessage('user', 'Ver lista de fármacos registrados');
-    let resp = `📋 <strong>Fármacos activos en la base de datos (${state.medications.length}):</strong><br/><br/>`;
-    state.medications.forEach((m, idx) => {
+    appendBotMessage('user', 'Ver fármacos registrados en la base de datos');
+    let resp = `📋 <strong>Fármacos activos (${state.medications.length}):</strong><br/><br/>`;
+    state.medications.forEach(m => {
       const isDone = isChecked(dk, m.id);
-      resp += `${isDone ? '✅' : '⏳'} <strong>${m.scheduled_time || m.time} - ${m.name}</strong> (${m.dose})<br/>` +
+      const dogName = m.dog_name || getDogNameById(m.dog_id);
+      resp += `${isDone ? '✅' : '⏳'} <strong>[${dogName}] ${m.scheduled_time || m.time} - ${m.name}</strong> (${m.dose})<br/>` +
               `<span class="text-[#7A6E60]">${m.detail || 'Sin nota'}</span><br/><br/>`;
     });
     appendBotMessage('assistant', resp);
@@ -1141,21 +1367,21 @@ function handleBotAction(actionKey){
 
   else if(actionKey === 'hydration'){
     appendBotMessage('user', '¿Cómo evaluar si está deshidratado?');
-    const resp = `💧 <strong>Prueba del pliegue cutáneo en Sultán:</strong><br/>` +
-                 `1. Pellizca suavemente la piel del lomo o nuca y levántala.<br/>` +
-                 `2. Suéltala y cuenta los segundos:<br/>` +
-                 `• <strong>&lt; 2 segundos:</strong> Hidratación normal y turgente.<br/>` +
-                 `• <strong>2 a 3 segundos:</strong> Deshidratación leve.<br/>` +
-                 `• <strong>&gt; 3 segundos:</strong> Alerta de deshidratación marcada. Continúa el suero subcutáneo de 20cc cada 4 horas y ofrece agua o caldo desgrasado.`;
+    const resp = `💧 <strong>Prueba del pliegue cutáneo:</strong><br/>` +
+                 `1. Pellizca suavemente la piel del lomo o nuca.<br/>` +
+                 `2. Suelta y observa:<br/>` +
+                 `• <strong>&lt; 2 seg:</strong> Hidratado.<br/>` +
+                 `• <strong>2 a 3 seg:</strong> Leve deshidratación.<br/>` +
+                 `• <strong>&gt; 3 seg:</strong> Alerta: deshidratación marcada. Aplicar suero subcutáneo.`;
     appendBotMessage('assistant', resp);
   }
 
   else if(actionKey === 'vomit'){
     appendBotMessage('user', '¿Qué hacer si vomitó la dosis?');
     const resp = `🚨 <strong>Manejo de vómito de medicamentos:</strong><br/>` +
-                 `• <strong>Si vomitó antes de 20 min:</strong> La dosis casi no se absorbió. Deja descansar el estómago 30 minutos y ofrece un bocado de pollo con la dosis.<br/>` +
-                 `• <strong>Si vomitó después de 45-60 min:</strong> El fármaco ya se absorbió en gran parte; no repitas la dosis completa.<br/>` +
-                 `• <strong>IMPORTANTE:</strong> La Doxiciclina irrita el estómago vacío. Dásela SIEMPRE con comida blanda. Si los vómitos son continuos, avisa de inmediato al Dr. Marcano.`;
+                 `• <strong>Antes de 20 min:</strong> Repetir tras 30 min de reposo con un bocado de pollo.<br/>` +
+                 `• <strong>Después de 45 min:</strong> Ya se absorbió, no repetir.<br/>` +
+                 `• <strong>Doxiciclina:</strong> SIEMPRE dar con comida para que no irrite el estómago.`;
     appendBotMessage('assistant', resp);
   }
 
@@ -1166,29 +1392,30 @@ function handleBotAction(actionKey){
   }
 }
 
-/* ============ REPORTE WHATSAPP AL NÚMERO DEL USUARIO ============ */
+/* ============ REPORTE WHATSAPP AL NÚMERO 0412-3504829 ============ */
 function sendQuickWhatsAppReport(){
   const dk = localDateKey();
   const day = dayNumber();
   const checked = state.medications.filter(d => isChecked(dk, d.id));
-  const sueroCc = checked.filter(d => (d.med_type === 'syringe' || d.type === 'syringe')).length * 20;
-  const draft = state.clinicalDraft || {};
 
-  let msg = `*REPORTE CLÍNICO DE SULTÁN* 🐾\n`;
+  let msg = `*REPORTE CLÍNICO VETERINARIO* 🐾\n`;
   msg += `📅 *Fecha:* ${dk} (Día ${day} de 21)\n`;
   msg += `👤 *Responsable:* ${state.userName || 'Jesús'}\n\n`;
 
-  msg += `💊 *Tomas administradas hoy (${checked.length}/${state.medications.length}):*\n`;
-  state.medications.forEach(d => {
-    const isDone = isChecked(dk, d.id);
-    msg += `${isDone ? '✅' : '⏳'} ${d.scheduled_time || d.time} - ${d.name} (${d.dose})\n`;
+  // Agrupar por perro
+  state.dogs.forEach(dog => {
+    const dogMeds = state.medications.filter(m => (m.dog_id || 'dog-sultan') === dog.id);
+    if(dogMeds.length > 0){
+      msg += `🐶 *${dog.name}* (${dog.breed || 'Canino'}):\n`;
+      dogMeds.forEach(m => {
+        const isDone = isChecked(dk, m.id);
+        msg += `  ${isDone ? '✅' : '⏳'} ${m.scheduled_time || m.time} - ${m.name} (${m.dose})\n`;
+      });
+      msg += `\n`;
+    }
   });
 
-  msg += `\n💧 *Suero subcutáneo:* ${sueroCc} cc acumulados hoy\n`;
-  msg += `🥣 *Apetito:* ${draft.appetite || '3'}/5\n`;
-  msg += `⚡ *Ánimo:* ${draft.energy || 'Decaído'}\n`;
-  msg += `\n_Reporte generado automáticamente desde el panel de control de Sultán._`;
-
+  msg += `_Reporte automático enviado desde el panel de control canino._`;
   const url = `https://wa.me/${USER_WHATSAPP}?text=${encodeURIComponent(msg)}`;
   window.open(url, '_blank');
 }
@@ -1230,7 +1457,13 @@ async function syncFromSupabase(){
   const dk = localDateKey();
 
   try {
-    // 1. Cargar medicamentos
+    // 1. Cargar Perros
+    const { data: dogs } = await supabaseClient.from('sultan_dogs').select('*');
+    if(dogs && dogs.length > 0){
+      state.dogs = dogs;
+    }
+
+    // 2. Cargar Medicamentos
     const { data: meds } = await supabaseClient
       .from('sultan_medications')
       .select('*')
@@ -1241,7 +1474,7 @@ async function syncFromSupabase(){
       state.medications = meds;
     }
 
-    // 2. Cargar tomas de hoy
+    // 3. Cargar Tomas de hoy
     const { data: doses } = await supabaseClient
       .from('sultan_dose_logs')
       .select('*')
@@ -1254,24 +1487,18 @@ async function syncFromSupabase(){
       });
     }
 
-    // 3. Cargar días completados
+    // 4. Cargar Días completados
     const { data: days } = await supabaseClient.from('sultan_completed_days').select('*');
     if(days){
       days.forEach(row => { state.completedDays[row.day_date] = true; });
     }
 
-    // 4. Cargar fecha de inicio
-    const { data: settings } = await supabaseClient.from('sultan_treatment_settings').select('*').eq('id', 'sultan_main').single();
-    if(settings && settings.start_date){
-      state.startDate = settings.start_date;
-      const inp = document.getElementById('startDateInput');
-      if(inp) inp.value = state.startDate;
-    }
-
     saveState();
+    renderDogChips();
     renderTimeline();
     renderMedsList();
     renderCalendar();
+    updateProfileView();
     updateStats();
   } catch(e){
     console.warn('Error sincronizando de Supabase:', e);
@@ -1297,9 +1524,8 @@ function setupSupabaseRealtime(){
       renderCalendar();
       updateStats();
     })
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'sultan_medications' }, () => {
-      syncFromSupabase();
-    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'sultan_medications' }, () => syncFromSupabase())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'sultan_dogs' }, () => syncFromSupabase())
     .subscribe();
 }
 
@@ -1310,24 +1536,19 @@ function updateCloudBadge(connected){
   if(txt) txt.textContent = connected ? 'Nube Activa (Supabase)' : 'Modo Local';
 }
 
-/* ============ NOTIFICACIONES EN TELÉFONO ============ */
+/* ============ NOTIFICACIONES ============ */
 async function requestNotifications(){
   ensureAudio();
-  if(!('Notification' in window)){
-    alert('Tu navegador no soporta notificaciones de sistema.');
-    return;
-  }
+  if(!('Notification' in window)){ alert('Navegador sin soporte de notificaciones.'); return; }
   try {
     const p = await Notification.requestPermission();
     if(p === 'granted'){
       state.notificationsEnabled = true; saveState();
       document.getElementById('notifBanner').classList.add('hidden');
-      sendDeviceNotification('✅ Alarmas activas', 'Recibirás avisos sonoros y en pantalla para Sultán.');
-      alert('¡Permiso concedido! Las alarmas y avisos sonoros están activos.');
-    } else {
-      alert('Debes permitir las notificaciones en los ajustes de tu navegador para que suenen.');
+      sendDeviceNotification('✅ Alarmas activas', 'Recibirás avisos sonoros para los tratamientos.');
+      alert('¡Permiso concedido! Alarmas y avisos activos.');
     }
-  } catch(e){ alert('Error solicitando permisos: ' + e.message); }
+  } catch(e){}
 }
 
 function toggleSound(){
@@ -1343,20 +1564,9 @@ function testAlarm(){
   else alert('No hay medicamentos configurados.');
 }
 
-function saveClinicalLogDraft(){
-  state.clinicalDraft = {
-    appetite: document.getElementById('logAppetite').value,
-    energy: document.getElementById('logEnergy').value
-  };
-  saveState();
-}
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('/sw.js').catch(()=>{}); }
 
-/* ============ SERVICE WORKER REGISTRATION ============ */
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('/sw.js').catch(()=>{});
-}
-
-/* ============ INICIALIZACIÓN GLOBAL ============ */
+/* ============ INICIALIZACIÓN ============ */
 function init(){
   loadState();
 
@@ -1379,9 +1589,11 @@ function init(){
     });
   }
 
+  renderDogChips();
   renderTimeline();
   renderMedsList();
   renderCalendar();
+  updateProfileView();
   updateStats();
   updateClock();
   updateNextDose();
