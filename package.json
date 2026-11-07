@@ -1,0 +1,12 @@
+{
+  "name": "tratamiento-sultan",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Panel de Control y Monitoreo Médico para Sultán con IA y Supabase",
+  "type": "module",
+  "scripts": {
+    "dev": "npx serve .",
+    "start": "npx serve ."
+  },
+  "dependencies": {}
+}

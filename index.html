@@ -1,0 +1,1508 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-950 text-slate-100">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#020617">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sultán">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Tratamiento Sultán · Panel Médico & IA</title>
+
+<!-- Tailwind & Phosphor Icons -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+<!-- Supabase JS Client (v2) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+      }
+    }
+  }
+}
+</script>
+
+<style>
+  html, body { -webkit-tap-highlight-color: transparent; }
+  body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-variant-numeric: tabular-nums; }
+  .font-mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #020617; }
+  ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 9999px; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  @keyframes ping-soft { 0%, 100% { transform: scale(1); opacity: .5; } 50% { transform: scale(1.25); opacity: 0; } }
+  .animate-ping-soft { animation: ping-soft 2s cubic-bezier(0,0,.2,1) infinite; }
+  @keyframes ring { 0%, 100% { transform: rotate(0); } 20% { transform: rotate(14deg); } 40% { transform: rotate(-14deg); } 60% { transform: rotate(10deg); } 80% { transform: rotate(-10deg); } }
+  .animate-ring { animation: ring 1s ease-in-out infinite; }
+  .safe-top { padding-top: max(1rem, env(safe-area-inset-top)); }
+  .safe-bottom { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+  button { touch-action: manipulation; }
+  input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(.7); cursor: pointer; }
+</style>
+</head>
+<body class="min-h-full bg-slate-950 text-slate-100 antialiased selection:bg-emerald-500/30">
+
+<!-- ============================================================================== -->
+<!-- MODAL ALARMA DE MEDICAMENTO -->
+<!-- ============================================================================== -->
+<div id="alarmModal" class="fixed inset-0 z-[100] bg-slate-950/95 backdrop-blur-xl hidden items-center justify-center p-3 sm:p-4">
+  <div class="bg-gradient-to-b from-amber-950/40 to-slate-900 border-2 border-amber-500/50 rounded-3xl p-5 sm:p-8 max-w-lg w-full shadow-2xl shadow-amber-500/20 text-center relative overflow-hidden safe-bottom">
+    <div class="absolute -top-20 -right-20 w-40 h-40 bg-amber-500/20 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="relative">
+      <div class="relative w-20 h-20 mx-auto mb-4">
+        <div class="absolute inset-0 bg-amber-500/30 rounded-full animate-ping-soft"></div>
+        <div class="relative w-20 h-20 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center text-slate-950 text-4xl shadow-lg shadow-amber-500/40 animate-ring">
+          <i class="ph-bold ph-bell-ringing"></i>
+        </div>
+      </div>
+      <span class="inline-block text-[10px] font-bold tracking-widest text-amber-300 uppercase bg-amber-500/15 border border-amber-500/40 px-3 py-1 rounded-full mb-3">⏰ Hora de la toma de Sultán</span>
+      <h3 id="modalDoseName" class="text-2xl sm:text-3xl font-black text-white mb-1">—</h3>
+      <p id="modalDoseTime" class="text-amber-300 font-mono font-bold text-lg mb-1">--:--</p>
+      <p id="modalDoseDetail" class="text-slate-300 text-sm mb-6">—</p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <button onclick="snoozeAlarm(10)" class="w-full py-4 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-100 font-bold text-sm rounded-2xl border border-slate-700 flex items-center justify-center gap-2 min-h-[56px] transition">
+          <i class="ph-bold ph-clock-afternoon text-lg"></i> Posponer 10 min
+        </button>
+        <button onclick="confirmCurrentAlarm()" class="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-500 active:scale-95 text-slate-950 font-black text-sm rounded-2xl shadow-lg shadow-emerald-500/30 flex items-center justify-center gap-2 min-h-[56px] transition">
+          <i class="ph-bold ph-check-circle text-lg"></i> Confirmar Toma
+        </button>
+      </div>
+      <p id="modalRingingTime" class="text-[10px] text-slate-500 mt-3 font-mono">🔔 Sonando…</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================================== -->
+<!-- MODAL DE CONFIGURACIÓN DE NUBE (SUPABASE) -->
+<!-- ============================================================================== -->
+<div id="cloudModal" class="fixed inset-0 z-[90] bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-4">
+  <div class="bg-slate-900 border border-slate-700 rounded-3xl p-6 max-w-md w-full shadow-2xl relative">
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center text-lg">
+          <i class="ph-bold ph-cloud"></i>
+        </div>
+        <h3 class="font-bold text-white text-base">Sincronización en la Nube</h3>
+      </div>
+      <button onclick="toggleCloudModal(false)" class="text-slate-400 hover:text-white p-1">
+        <i class="ph-bold ph-x text-lg"></i>
+      </button>
+    </div>
+    
+    <p class="text-xs text-slate-300 mb-4 leading-relaxed">
+      Conecta Supabase para que toda la familia y cuidadores vean las tomas de Sultán en tiempo real desde cualquier celular o computadora.
+    </p>
+
+    <div class="space-y-3">
+      <div>
+        <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1">Supabase Project URL</label>
+        <input type="text" id="cfgSupabaseUrl" placeholder="https://xyzcompany.supabase.co" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 font-mono">
+      </div>
+      <div>
+        <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1">Supabase Anon Public Key</label>
+        <input type="password" id="cfgSupabaseKey" placeholder="eyJhbGciOi..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 font-mono">
+      </div>
+      <div>
+        <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1">Nombre del Cuidador Actual</label>
+        <input type="text" id="cfgUserName" placeholder="Ej: Jesús / Mamá / Papá" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500">
+      </div>
+    </div>
+
+    <div class="mt-5 flex gap-2">
+      <button onclick="saveSupabaseConfig()" class="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/20">
+        <i class="ph-bold ph-floppy-disk"></i> Guardar y Conectar
+      </button>
+      <button onclick="disconnectSupabase()" class="px-3 py-2.5 bg-slate-800 hover:bg-rose-900/40 border border-slate-700 text-slate-300 hover:text-rose-300 text-xs rounded-xl font-semibold transition" title="Desconectar">
+        Desconectar
+      </button>
+    </div>
+    <p id="cloudStatusMsg" class="text-[11px] text-center mt-3 text-slate-400"></p>
+  </div>
+</div>
+
+<!-- ============================================================================== -->
+<!-- CONTENEDOR PRINCIPAL -->
+<!-- ============================================================================== -->
+<div class="max-w-7xl mx-auto w-full px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6 safe-top">
+
+  <!-- HEADER -->
+  <header class="bg-slate-900/90 border border-slate-800 backdrop-blur-md rounded-3xl p-4 sm:p-6 shadow-2xl">
+    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+      <div class="flex items-center gap-3 w-full lg:w-auto">
+        <div class="relative shrink-0">
+          <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-tr from-emerald-600 to-teal-400 rounded-2xl flex items-center justify-center text-slate-950 text-2xl sm:text-3xl shadow-lg shadow-emerald-500/20">
+            <i class="ph-bold ph-dog"></i>
+          </div>
+          <span class="absolute -bottom-1 -right-1 flex h-4 w-4">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-slate-900"></span>
+          </span>
+        </div>
+        <div class="min-w-0 flex-1">
+          <div class="flex flex-wrap items-center gap-2">
+            <h1 class="text-xl sm:text-2xl font-black tracking-tight text-white">Sultán</h1>
+            <span class="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full">Tratamiento 21 Días</span>
+            <!-- Cloud Badge -->
+            <button onclick="toggleCloudModal(true)" id="cloudStatusBadge" class="bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-slate-400 text-[10px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1.5 transition">
+              <span class="w-2 h-2 rounded-full bg-slate-500" id="cloudStatusDot"></span>
+              <span id="cloudStatusText">Modo Local</span>
+            </button>
+          </div>
+          <p class="text-slate-400 text-xs mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span class="flex items-center gap-1"><i class="ph-bold ph-user-doctor text-emerald-400"></i> Dr. José Marcano</span>
+            <a href="tel:04169957400" class="text-emerald-400 hover:underline font-semibold flex items-center gap-1">
+              <i class="ph-bold ph-phone"></i> 0416-9957400
+            </a>
+            <a href="https://wa.me/584169957400" target="_blank" class="text-teal-400 hover:underline text-[11px] font-bold flex items-center gap-1">
+              <i class="ph-bold ph-whatsapp-logo text-xs"></i> WhatsApp Dr.
+            </a>
+          </p>
+        </div>
+      </div>
+      
+      <div class="grid grid-cols-2 gap-2.5 w-full lg:w-auto">
+        <div class="bg-slate-950/80 border border-slate-800 p-3 rounded-2xl flex flex-col justify-center items-center text-center">
+          <span class="text-[9px] font-bold tracking-wider text-slate-400 uppercase mb-1">Hora actual</span>
+          <div id="liveClock" class="text-base sm:text-lg font-mono font-extrabold text-emerald-400">--:--:--</div>
+        </div>
+        <div class="bg-slate-950/80 border border-slate-800 p-3 rounded-2xl flex flex-col justify-center items-center text-center">
+          <span class="text-[9px] font-bold tracking-wider text-amber-400 uppercase flex items-center gap-1 mb-1">
+            <i class="ph-bold ph-timer"></i> Próxima en
+          </span>
+          <div id="nextDoseCountdown" class="text-base sm:text-lg font-mono font-bold text-amber-300">--:--:--</div>
+          <span id="nextDoseName" class="text-[10px] text-slate-400 truncate max-w-[140px] mt-0.5">Cargando…</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Acciones secundarias header -->
+    <div class="mt-4 pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+      <div class="flex flex-wrap items-center gap-2">
+        <button id="btnNotif" onclick="requestNotifications()" class="flex-1 sm:flex-none px-3.5 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition min-h-[40px]">
+          <i class="ph-bold ph-bell"></i> <span id="notifBtnText">Activar Notificaciones</span>
+        </button>
+        <button onclick="testAlarm()" class="flex-1 sm:flex-none px-3.5 py-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-300 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition min-h-[40px]">
+          <i class="ph-bold ph-speaker-high"></i> Probar Alarma
+        </button>
+        <button id="btnSound" onclick="toggleSound()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl text-xs font-bold min-h-[40px]" title="Sonido">
+          <i id="soundIcon" class="ph-bold ph-speaker-high"></i>
+        </button>
+        <button onclick="toggleCloudModal(true)" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-xl text-xs font-semibold min-h-[40px] flex items-center gap-1.5" title="Ajustes Supabase">
+          <i class="ph-bold ph-gear"></i> Nube
+        </button>
+      </div>
+      <div class="text-xs text-slate-400 flex items-center justify-center gap-2">
+        <i class="ph-bold ph-calendar text-emerald-400 text-sm"></i>
+        <span>Día <strong id="currentDayBadge" class="text-white font-bold">1</strong> de 21</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- STATS RÁPIDAS -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    <div class="bg-slate-900/80 border border-slate-800 p-3.5 rounded-2xl flex items-center gap-3">
+      <div class="w-11 h-11 bg-rose-500/10 border border-rose-500/30 text-rose-400 rounded-xl flex items-center justify-center text-xl shrink-0"><i class="ph-bold ph-pill"></i></div>
+      <div class="min-w-0">
+        <span class="text-[10px] text-slate-400 font-medium block uppercase tracking-wide">Tomas hoy</span>
+        <h3 id="statTodayCount" class="text-base sm:text-lg font-black text-white">0/10</h3>
+      </div>
+    </div>
+    <div class="bg-slate-900/80 border border-slate-800 p-3.5 rounded-2xl flex items-center gap-3">
+      <div class="w-11 h-11 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-xl flex items-center justify-center text-xl shrink-0"><i class="ph-bold ph-chart-line-up"></i></div>
+      <div class="w-full min-w-0">
+        <div class="flex justify-between items-center mb-1">
+          <span class="text-[10px] text-slate-400 font-medium uppercase tracking-wide">Progreso Global</span>
+          <span id="statGlobalPercent" class="text-xs font-bold text-emerald-400">0%</span>
+        </div>
+        <div class="w-full bg-slate-950 rounded-full h-1.5 border border-slate-800 overflow-hidden">
+          <div id="statGlobalBar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full w-0 transition-all duration-500"></div>
+        </div>
+      </div>
+    </div>
+    <div class="bg-slate-900/80 border border-slate-800 p-3.5 rounded-2xl flex items-center gap-3">
+      <div class="w-11 h-11 bg-purple-500/10 border border-purple-500/30 text-purple-400 rounded-xl flex items-center justify-center text-xl shrink-0"><i class="ph-bold ph-shield-check"></i></div>
+      <div class="min-w-0">
+        <span class="text-[10px] text-slate-400 font-medium block uppercase tracking-wide">Doxiciclina</span>
+        <h3 id="statDoxiCount" class="text-xs font-bold text-slate-200 truncate">Día 1 / 21</h3>
+      </div>
+    </div>
+    <div class="bg-slate-900/80 border border-slate-800 p-3.5 rounded-2xl flex items-center gap-3">
+      <div class="w-11 h-11 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 rounded-xl flex items-center justify-center text-xl shrink-0"><i class="ph-bold ph-drop"></i></div>
+      <div class="min-w-0">
+        <span class="text-[10px] text-slate-400 font-medium block uppercase tracking-wide">Suero Hoy</span>
+        <h3 id="statSueroCount" class="text-xs font-bold text-slate-200 truncate">0 / 120 cc</h3>
+      </div>
+    </div>
+  </div>
+
+  <!-- NAVEGACIÓN PESTAÑAS -->
+  <nav class="flex gap-2 border-b border-slate-800 pb-3 overflow-x-auto no-scrollbar">
+    <button onclick="switchTab('horario')" id="btn-horario" class="tab-btn active px-3.5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition whitespace-nowrap min-h-[44px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+      <i class="ph-bold ph-clock"></i> Timeline
+    </button>
+    <button onclick="switchTab('asistente-ia')" id="btn-asistente-ia" class="tab-btn px-3.5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition whitespace-nowrap min-h-[44px] text-slate-400 hover:text-slate-200 hover:bg-slate-900 relative">
+      <i class="ph-bold ph-sparkle text-amber-400"></i> Asistente IA
+      <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+    </button>
+    <button onclick="switchTab('bitacora')" id="btn-bitacora" class="tab-btn px-3.5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition whitespace-nowrap min-h-[44px] text-slate-400 hover:text-slate-200 hover:bg-slate-900">
+      <i class="ph-bold ph-clipboard-text"></i> Bitácora & Reporte
+    </button>
+    <button onclick="switchTab('calendario')" id="btn-calendario" class="tab-btn px-3.5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition whitespace-nowrap min-h-[44px] text-slate-400 hover:text-slate-200 hover:bg-slate-900">
+      <i class="ph-bold ph-calendar-blank"></i> 21 Días
+    </button>
+    <button onclick="switchTab('jeringas')" id="btn-jeringas" class="tab-btn px-3.5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition whitespace-nowrap min-h-[44px] text-slate-400 hover:text-slate-200 hover:bg-slate-900">
+      <i class="ph-bold ph-syringe"></i> Jeringas
+    </button>
+    <button onclick="switchTab('dieta')" id="btn-dieta" class="tab-btn px-3.5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition whitespace-nowrap min-h-[44px] text-slate-400 hover:text-slate-200 hover:bg-slate-900">
+      <i class="ph-bold ph-bowl-food"></i> Dieta
+    </button>
+    <button onclick="switchTab('medicamentos')" id="btn-medicamentos" class="tab-btn px-3.5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition whitespace-nowrap min-h-[44px] text-slate-400 hover:text-slate-200 hover:bg-slate-900">
+      <i class="ph-bold ph-first-aid"></i> Fármacos
+    </button>
+  </nav>
+
+  <!-- ============================================================================== -->
+  <!-- TAB: TIMELINE / CRONOGRAMA -->
+  <!-- ============================================================================== -->
+  <section id="tab-horario" class="tab-content space-y-4">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+      <div>
+        <h2 class="text-base sm:text-lg font-extrabold text-white flex items-center gap-2">
+          <i class="ph-bold ph-list-checks text-emerald-400"></i> Cronograma de hoy
+        </h2>
+        <p class="text-xs text-slate-400 mt-0.5">Marca cada toma administrada a Sultán.</p>
+      </div>
+      <div class="flex items-center gap-2 w-full sm:w-auto">
+        <button onclick="sendQuickWhatsAppReport()" class="flex-1 sm:flex-none px-3.5 py-2.5 bg-teal-600/20 hover:bg-teal-600/30 border border-teal-500/40 text-teal-300 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition">
+          <i class="ph-bold ph-whatsapp-logo text-base"></i> Reporte WhatsApp
+        </button>
+        <button onclick="resetToday()" class="px-3.5 py-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs text-amber-400 font-semibold rounded-xl flex items-center justify-center gap-1.5 transition min-h-[44px]" title="Reiniciar tomas de hoy">
+          <i class="ph-bold ph-arrows-counter-clockwise"></i> Reiniciar
+        </button>
+      </div>
+    </div>
+    <div id="scheduleContainer" class="grid gap-2.5"></div>
+  </section>
+
+  <!-- ============================================================================== -->
+  <!-- TAB: ASISTENTE IA VETERINARIO -->
+  <!-- ============================================================================== -->
+  <section id="tab-asistente-ia" class="tab-content hidden space-y-4">
+    <div class="bg-slate-900/90 border border-slate-800 rounded-3xl p-4 sm:p-6 shadow-2xl flex flex-col h-[650px] relative">
+      <!-- AI Header -->
+      <div class="flex items-center justify-between pb-4 border-b border-slate-800/80">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-400 to-orange-500 text-slate-950 flex items-center justify-center text-2xl shadow-lg shadow-amber-500/20">
+            <i class="ph-bold ph-sparkle"></i>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-white text-base flex items-center gap-1.5">
+              IA Sultán Vet
+              <span class="text-[9px] bg-amber-500/20 border border-amber-500/40 text-amber-300 px-2 py-0.5 rounded-full font-mono">Gemini 2.5</span>
+            </h3>
+            <p class="text-xs text-slate-400">Asesor clínico para dudas de medicación, dosis y signos.</p>
+          </div>
+        </div>
+        <a href="tel:04169957400" class="text-xs font-bold text-rose-400 bg-rose-500/10 border border-rose-500/30 px-3 py-1.5 rounded-xl hover:bg-rose-500/20 flex items-center gap-1.5 transition">
+          <i class="ph-bold ph-phone-call"></i> Urgencia Vet
+        </a>
+      </div>
+
+      <!-- Quick prompts -->
+      <div class="py-3 flex gap-2 overflow-x-auto no-scrollbar border-b border-slate-800/50">
+        <button onclick="askPreset('🚨 Sultán acaba de vomitar la dosis de medicamento. ¿Qué debo hacer exactamente?')" class="text-[11px] whitespace-nowrap bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white px-3 py-1.5 rounded-lg transition flex items-center gap-1">
+          <i class="ph-bold ph-warning text-amber-400"></i> ¿Vomitó la dosis?
+        </button>
+        <button onclick="askPreset('💧 ¿Cómo realizo la prueba del pliegue cutáneo para saber si Sultán está deshidratado?')" class="text-[11px] whitespace-nowrap bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white px-3 py-1.5 rounded-lg transition flex items-center gap-1">
+          <i class="ph-bold ph-drop text-cyan-400"></i> ¿Signos de deshidratación?
+        </button>
+        <button onclick="askPreset('💉 ¿Cómo inyecto los 20cc de suero subcutáneo de forma segura y sin lastimarlo?')" class="text-[11px] whitespace-nowrap bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white px-3 py-1.5 rounded-lg transition flex items-center gap-1">
+          <i class="ph-bold ph-syringe text-purple-400"></i> Técnica suero subcutáneo
+        </button>
+        <button onclick="askPreset('⚠️ ¿Cuáles son los signos de alarma crítica por los que debo llamar de inmediato al Dr. Marcano?')" class="text-[11px] whitespace-nowrap bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white px-3 py-1.5 rounded-lg transition flex items-center gap-1">
+          <i class="ph-bold ph-first-aid text-rose-400"></i> Signos de alarma crítica
+        </button>
+      </div>
+
+      <!-- Chat Messages Container -->
+      <div id="aiChatMessages" class="flex-1 overflow-y-auto space-y-3.5 py-4 pr-1 text-sm">
+        <!-- Mensaje de bienvenida -->
+        <div class="flex items-start gap-3">
+          <div class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 text-sm mt-0.5">
+            <i class="ph-bold ph-sparkle"></i>
+          </div>
+          <div class="bg-slate-950 border border-slate-800 rounded-2xl p-3.5 max-w-[85%] text-slate-200 text-xs leading-relaxed">
+            <p class="font-bold text-white mb-1">¡Hola! Soy el asistente virtual para el cuidado de Sultán 🐾</p>
+            <p>Conozco su protocolo de 21 días (Doxiciclina, Metrifol, Pentaviral, Omeprazol y Suero Subcutáneo). Puedes preguntarme cualquier duda sobre administración, horarios, qué alimentos darle o cómo evaluar sus signos vitales.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat Input Form -->
+      <form onsubmit="handleSendAiMessage(event)" class="pt-3 border-t border-slate-800/80 flex items-center gap-2">
+        <input type="text" id="aiInputText" placeholder="Pregúntale a la IA sobre Sultán (ej: ¿por qué no puede tomar leche?)..." class="flex-1 bg-slate-950 border border-slate-800 focus:border-amber-500/50 rounded-xl px-4 py-3 text-xs text-white placeholder-slate-500 focus:outline-none transition">
+        <button type="submit" id="aiSendBtn" class="px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-amber-500/20 active:scale-95 transition">
+          <span class="hidden sm:inline">Enviar</span> <i class="ph-bold ph-paper-plane-right text-base"></i>
+        </button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ============================================================================== -->
+  <!-- TAB: BITÁCORA CLÍNICA & REPORTE WHATSAPP -->
+  <!-- ============================================================================== -->
+  <section id="tab-bitacora" class="tab-content hidden space-y-4">
+    <div class="bg-slate-900/80 border border-slate-800 rounded-3xl p-4 sm:p-6 space-y-5">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div>
+          <h3 class="text-base font-bold text-white flex items-center gap-2">
+            <i class="ph-bold ph-clipboard-text text-emerald-400"></i> Bitácora Diaria de Signos Clínicos
+          </h3>
+          <p class="text-xs text-slate-400 mt-0.5">Registra la evolución diaria para informarle al Dr. José Marcano.</p>
+        </div>
+        <button onclick="sendQuickWhatsAppReport()" class="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-black text-xs rounded-xl flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition">
+          <i class="ph-bold ph-whatsapp-logo text-base"></i> Enviar Reporte por WhatsApp
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Apetito -->
+        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4">
+          <label class="block text-xs font-bold text-slate-300 mb-2 flex items-center gap-1.5">
+            <i class="ph-bold ph-bowl-food text-amber-400"></i> Apetito hoy
+          </label>
+          <select id="logAppetite" onchange="saveClinicalLogDraft()" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none">
+            <option value="5">⭐⭐⭐⭐⭐ Excelente (Comió todo con ánimo)</option>
+            <option value="4">⭐⭐⭐⭐ Bueno (Comió casi todo)</option>
+            <option value="3" selected>⭐⭐⭐ Regular (Comió obligado / asistido)</option>
+            <option value="2">⭐⭐ Malo (Poco apetito / rechaza comida)</option>
+            <option value="1">⭐ Muy malo (Anorexia total)</option>
+          </select>
+        </div>
+
+        <!-- Hidratación -->
+        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4">
+          <label class="block text-xs font-bold text-slate-300 mb-2 flex items-center gap-1.5">
+            <i class="ph-bold ph-drop text-cyan-400"></i> Turgencia / Pliegue cutáneo
+          </label>
+          <select id="logHydration" onchange="saveClinicalLogDraft()" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none">
+            <option value="Normal">Normal (La piel vuelve en < 2 seg)</option>
+            <option value="Leve deshidratación">Leve deshidratación (Piel tarda 2-3 seg)</option>
+            <option value="Deshidratación marcada">Alerta: Deshidratado (Piel tarda > 3 seg)</option>
+          </select>
+        </div>
+
+        <!-- Nivel de energía -->
+        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4">
+          <label class="block text-xs font-bold text-slate-300 mb-2 flex items-center gap-1.5">
+            <i class="ph-bold ph-lightning text-purple-400"></i> Nivel de ánimo / energía
+          </label>
+          <select id="logEnergy" onchange="saveClinicalLogDraft()" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none">
+            <option value="Activo y alerta">Activo y alerta</option>
+            <option value="Tranquilo / descansando">Tranquilo / descansando</option>
+            <option value="Decaído" selected>Decaído / somnoliento</option>
+            <option value="Muy débil / postrado">Muy débil / postrado</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Observaciones y vómito -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4">
+          <label class="block text-xs font-bold text-slate-300 mb-2 flex items-center gap-1.5">
+            <i class="ph-bold ph-thermometer text-rose-400"></i> Temperatura rectal (°C)
+          </label>
+          <input type="number" step="0.1" id="logTemp" placeholder="Ej: 38.5 (Normal: 38.0 - 39.2)" onchange="saveClinicalLogDraft()" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none">
+        </div>
+
+        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4">
+          <label class="block text-xs font-bold text-slate-300 mb-2 flex items-center gap-1.5">
+            <i class="ph-bold ph-warning-octagon text-amber-400"></i> Vómitos o Diarrea
+          </label>
+          <select id="logVomit" onchange="saveClinicalLogDraft()" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none">
+            <option value="No">No ha presentado</option>
+            <option value="Vómito aislado">Vómito aislado (1 vez)</option>
+            <option value="Vómitos frecuentes">Vómitos repetidos (Alerta)</option>
+            <option value="Diarrea blanda">Diarrea blanda</option>
+            <option value="Diarrea líquida con sangre">Diarrea líquida con sangre (Urgencia)</option>
+          </select>
+        </div>
+
+        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-2 flex items-center gap-1.5">
+              <i class="ph-bold ph-note-pencil text-teal-400"></i> Observaciones adicionales
+            </label>
+            <textarea id="logNotes" rows="2" placeholder="Ej: tomó agua voluntariamente, orinó color claro..." onchange="saveClinicalLogDraft()" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-slate-200 focus:outline-none"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================================== -->
+  <!-- TAB: CALENDARIO 21 DÍAS -->
+  <!-- ============================================================================== -->
+  <section id="tab-calendario" class="tab-content hidden space-y-4">
+    <div class="bg-slate-900/80 border border-slate-800 rounded-3xl p-4 sm:p-6">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-5">
+        <div>
+          <h3 class="text-base font-bold text-white flex items-center gap-2">
+            <i class="ph-bold ph-calendar-check text-emerald-400"></i> Seguimiento 21 días
+          </h3>
+          <p class="text-xs text-slate-400 mt-1">Toca un día para marcarlo manualmente como completado.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2.5 text-[10px]">
+          <span class="flex items-center gap-1.5 text-slate-300"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>Completado</span>
+          <span class="flex items-center gap-1.5 text-slate-300"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>Hoy en curso</span>
+          <span class="flex items-center gap-1.5 text-slate-300"><span class="w-2.5 h-2.5 rounded-full bg-slate-700"></span>Pendiente</span>
+        </div>
+      </div>
+      <div id="calendarGrid" class="grid grid-cols-7 gap-1.5 sm:gap-2"></div>
+      <div class="mt-5 pt-4 border-t border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div class="text-xs text-slate-400">
+          <i class="ph-bold ph-info text-emerald-400"></i> Fecha de inicio del tratamiento:
+          <input type="date" id="startDateInput" class="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-xs text-slate-100 ml-1" />
+        </div>
+        <button onclick="resetStartDate()" class="text-xs text-amber-400 hover:text-amber-300 font-semibold px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg transition">
+          <i class="ph-bold ph-arrow-counter-clockwise"></i> Iniciar hoy
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================================== -->
+  <!-- TAB: JERINGAS VISUALES -->
+  <!-- ============================================================================== -->
+  <section id="tab-jeringas" class="tab-content hidden space-y-4">
+    <div class="bg-slate-900/80 border border-slate-800 rounded-3xl p-4 sm:p-6">
+      <div class="text-center mb-6">
+        <h3 class="text-base sm:text-lg font-bold text-white mb-1 flex items-center justify-center gap-2">
+          <i class="ph-bold ph-syringe text-cyan-400"></i> Medidor visual de jeringas
+        </h3>
+        <p class="text-xs text-slate-400">Referencia gráfica exacta para no confundir las dosis.</p>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <!-- 2 cc -->
+        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 text-center flex flex-col items-center">
+          <span class="text-[10px] font-bold text-purple-400 uppercase tracking-wider mb-1">Doxiciclina · Metrifol</span>
+          <h4 class="text-sm font-black text-white mb-3">2 cc (ml)</h4>
+          <div class="w-14 h-48 bg-slate-900 border-2 border-slate-700 rounded-b-xl relative overflow-hidden mb-3 shadow-inner">
+            <div class="absolute inset-x-0 bottom-0 h-[66%] bg-gradient-to-t from-purple-600 to-indigo-400 rounded-b-lg flex items-center justify-center">
+              <span class="text-[10px] font-mono font-black text-white">2 cc</span>
+            </div>
+            <div class="absolute inset-x-0 top-4 border-t border-slate-700/60 text-[8px] font-mono text-slate-500 text-center">3cc</div>
+            <div class="absolute inset-x-0 top-[33%] border-t-2 border-purple-400 text-[8px] font-mono text-purple-300 font-black text-center">2cc ◄</div>
+            <div class="absolute inset-x-0 top-[66%] border-t border-slate-700/60 text-[8px] font-mono text-slate-500 text-center">1cc</div>
+          </div>
+          <p class="text-[10px] text-slate-400">Usa jeringa de 3 o 5 cc</p>
+        </div>
+        <!-- 5 cc -->
+        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 text-center flex flex-col items-center">
+          <span class="text-[10px] font-bold text-amber-400 uppercase tracking-wider mb-1">Pentaviral</span>
+          <h4 class="text-sm font-black text-white mb-3">5 cc (ml)</h4>
+          <div class="w-14 h-48 bg-slate-900 border-2 border-slate-700 rounded-b-xl relative overflow-hidden mb-3 shadow-inner">
+            <div class="absolute inset-x-0 bottom-0 h-full bg-gradient-to-t from-amber-600 to-yellow-400 rounded-b-lg flex items-center justify-center">
+              <span class="text-[10px] font-mono font-black text-slate-950">5 cc</span>
+            </div>
+            <div class="absolute inset-x-0 top-2 border-t border-slate-700/60 text-[8px] font-mono text-slate-400 text-center">5cc ◄</div>
+            <div class="absolute inset-x-0 top-[40%] border-t border-slate-700/60 text-[8px] font-mono text-slate-400 text-center">3cc</div>
+            <div class="absolute inset-x-0 top-[80%] border-t border-slate-700/60 text-[8px] font-mono text-slate-400 text-center">1cc</div>
+          </div>
+          <p class="text-[10px] text-slate-400">Jeringa de 5 cc completa</p>
+        </div>
+        <!-- 20 cc -->
+        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 text-center flex flex-col items-center">
+          <span class="text-[10px] font-bold text-cyan-400 uppercase tracking-wider mb-1">Suero Subcutáneo</span>
+          <h4 class="text-sm font-black text-white mb-3">20 cc (ml)</h4>
+          <div class="w-16 h-48 bg-slate-900 border-2 border-slate-700 rounded-b-xl relative overflow-hidden mb-3 shadow-inner">
+            <div class="absolute inset-x-0 bottom-0 h-full bg-gradient-to-t from-cyan-600 to-sky-400 rounded-b-lg flex items-center justify-center">
+              <span class="text-[10px] font-mono font-black text-white text-center leading-tight">20 cc<br/><span class="text-[8px] font-normal">4 × jeringa 5cc</span></span>
+            </div>
+          </div>
+          <p class="text-[10px] text-slate-400">≈ 4 descargas de jeringa 5cc</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================================== -->
+  <!-- TAB: DIETA -->
+  <!-- ============================================================================== -->
+  <section id="tab-dieta" class="tab-content hidden space-y-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="bg-slate-900/80 border border-slate-800 rounded-3xl p-4 sm:p-6">
+        <h3 class="text-base font-bold text-emerald-400 mb-3 flex items-center gap-2"><i class="ph-bold ph-check-circle"></i> Alimentos Permitidos</h3>
+        <ul class="space-y-2 text-sm text-slate-200">
+          <li class="flex items-start gap-2"><i class="ph-bold ph-paw-print text-emerald-400 mt-0.5"></i> Concentrado blando húmedo gastrointestinal</li>
+          <li class="flex items-start gap-2"><i class="ph-bold ph-paw-print text-emerald-400 mt-0.5"></i> Arroz blanco cocido suave (sin sal ni aceite)</li>
+          <li class="flex items-start gap-2"><i class="ph-bold ph-paw-print text-emerald-400 mt-0.5"></i> Pechuga de pollo hervida y desmenuzada</li>
+          <li class="flex items-start gap-2"><i class="ph-bold ph-paw-print text-emerald-400 mt-0.5"></i> Caldo de pollo desgrasado sin sal ni condimentos</li>
+          <li class="flex items-start gap-2"><i class="ph-bold ph-paw-print text-emerald-400 mt-0.5"></i> Agua fresca disponible las 24 horas</li>
+        </ul>
+      </div>
+      <div class="bg-slate-900/80 border border-slate-800 rounded-3xl p-4 sm:p-6">
+        <h3 class="text-base font-bold text-rose-400 mb-3 flex items-center gap-2"><i class="ph-bold ph-x-circle"></i> Alimentos Totalmente Prohibidos</h3>
+        <ul class="space-y-2 text-sm text-slate-200">
+          <li class="flex items-start gap-2"><i class="ph-bold ph-warning text-rose-400 mt-0.5"></i> Lácteos, queso o leche (Inactivan la Doxiciclina)</li>
+          <li class="flex items-start gap-2"><i class="ph-bold ph-warning text-rose-400 mt-0.5"></i> Embutidos, salchichas y carnes curadas</li>
+          <li class="flex items-start gap-2"><i class="ph-bold ph-warning text-rose-400 mt-0.5"></i> Huesos cocidos de cualquier tipo</li>
+          <li class="flex items-start gap-2"><i class="ph-bold ph-warning text-rose-400 mt-0.5"></i> Cebolla, ajo, chocolate, café o uvas</li>
+          <li class="flex items-start gap-2"><i class="ph-bold ph-warning text-rose-400 mt-0.5"></i> Comida con sal añadida o condimentos</li>
+        </ul>
+      </div>
+    </div>
+    <div class="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 text-xs text-amber-200 flex items-start gap-2.5">
+      <i class="ph-bold ph-info text-xl shrink-0 mt-0.5"></i>
+      <div>
+        <strong class="block mb-0.5">Regla de Oro con la Doxiciclina:</strong>
+        Administrarla SIEMPRE con comida y agua para evitar úlceras o náuseas. Nunca dar leche, queso ni antiácidos (separar al menos 2 a 3 horas). Completar los 21 días ininterrumpidos.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================================== -->
+  <!-- TAB: FÁRMACOS -->
+  <!-- ============================================================================== -->
+  <section id="tab-medicamentos" class="tab-content hidden space-y-3">
+    <div class="grid gap-3">
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4">
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-xl flex items-center justify-center text-lg shrink-0"><i class="ph-bold ph-pill"></i></div>
+          <div class="flex-1 min-w-0">
+            <h3 class="font-bold text-white">Omeprazol</h3>
+            <p class="text-xs text-slate-400 mt-0.5">1 tableta · 08:00 AM · en ayunas</p>
+            <p class="text-xs text-slate-300 mt-2 leading-relaxed">Protector de la mucosa gástrica. Se da 1 hora antes del primer alimento del día para prevenir irritación gástrica.</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4">
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 bg-purple-500/10 border border-purple-500/30 text-purple-400 rounded-xl flex items-center justify-center text-lg shrink-0"><i class="ph-bold ph-flask"></i></div>
+          <div class="flex-1 min-w-0">
+            <h3 class="font-bold text-white">Doxiciclina 100 mg</h3>
+            <p class="text-xs text-slate-400 mt-0.5">2 cc · 09:00 AM · Vía oral con comida</p>
+            <p class="text-xs text-slate-300 mt-2 leading-relaxed">Antibiótico principal. Debe darse con alimento y agua. Jamás junto a lácteos ni calcio. Cumplir 21 días estrictos.</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4">
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 bg-rose-500/10 border border-rose-500/30 text-rose-400 rounded-xl flex items-center justify-center text-lg shrink-0"><i class="ph-bold ph-drop-half"></i></div>
+          <div class="flex-1 min-w-0">
+            <h3 class="font-bold text-white">Metrifol</h3>
+            <p class="text-xs text-slate-400 mt-0.5">2 cc · 10:00 AM · con comida</p>
+            <p class="text-xs text-slate-300 mt-2 leading-relaxed">Protector y suplemento hepático/vitamínico para apoyar el metabolismo y hematología de Sultán.</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4">
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-xl flex items-center justify-center text-lg shrink-0"><i class="ph-bold ph-shield-plus"></i></div>
+          <div class="flex-1 min-w-0">
+            <h3 class="font-bold text-white">Pentaviral</h3>
+            <p class="text-xs text-slate-400 mt-0.5">5 cc · 10:00 AM · cada 24 horas</p>
+            <p class="text-xs text-slate-300 mt-2 leading-relaxed">Inmunomodulador y estimulante de defensas. Dosis única matutina.</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4">
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 rounded-xl flex items-center justify-center text-lg shrink-0"><i class="ph-bold ph-syringe"></i></div>
+          <div class="flex-1 min-w-0">
+            <h3 class="font-bold text-white">Suero Subcutáneo</h3>
+            <p class="text-xs text-slate-400 mt-0.5">20 cc · cada 4 h · 6 tomas diarias</p>
+            <p class="text-xs text-slate-300 mt-2 leading-relaxed">Horarios: 00:00, 04:00, 08:00, 12:00, 16:00, 20:00. Alternar puntos de punción (nuca, lomo izquierdo, lomo derecho). Hidratación vital.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ============================================================================== -->
+<!-- JAVASCRIPT: LOGICA, SUPABASE & ASISTENTE IA -->
+<!-- ============================================================================== -->
+<script>
+/* ============ CRONOGRAMA OFICIAL ============ */
+const SCHEDULE = [
+  { id:'sue-5', time:'00:00', name:'Suero #5',        dose:'20 cc',      detail:'Hidratación subcutánea', type:'syringe', color:'cyan', cc:20 },
+  { id:'sue-6', time:'04:00', name:'Suero #6',        dose:'20 cc',      detail:'Hidratación subcutánea', type:'syringe', color:'cyan', cc:20 },
+  { id:'ome',   time:'08:00', name:'Omeprazol',       dose:'1 tableta',  detail:'En ayunas · Protector',  type:'pill',    color:'emerald', cc:0 },
+  { id:'sue-1', time:'08:00', name:'Suero #1',        dose:'20 cc',      detail:'Hidratación subcutánea', type:'syringe', color:'cyan', cc:20 },
+  { id:'dox',   time:'09:00', name:'Doxiciclina 100mg',dose:'2 cc',      detail:'Antibiótico · con comida',type:'liquid', color:'purple', cc:0 },
+  { id:'met',   time:'10:00', name:'Metrifol',        dose:'2 cc',       detail:'Suplemento · con comida',type:'liquid',  color:'rose', cc:0 },
+  { id:'pent',  time:'10:00', name:'Pentaviral',      dose:'5 cc',       detail:'Inmunomodulador · 24h',  type:'liquid',  color:'amber', cc:0 },
+  { id:'sue-2', time:'12:00', name:'Suero #2',        dose:'20 cc',      detail:'Hidratación subcutánea', type:'syringe', color:'cyan', cc:20 },
+  { id:'sue-3', time:'16:00', name:'Suero #3',        dose:'20 cc',      detail:'Hidratación subcutánea', type:'syringe', color:'cyan', cc:20 },
+  { id:'sue-4', time:'20:00', name:'Suero #4',        dose:'20 cc',      detail:'Hidratación subcutánea', type:'syringe', color:'cyan', cc:20 },
+];
+
+const COLORS = {
+  emerald:{ bg:'bg-emerald-500/10', border:'border-emerald-500/30', text:'text-emerald-400', icon:'ph-pill',        dot:'bg-emerald-500' },
+  purple: { bg:'bg-purple-500/10',  border:'border-purple-500/30',  text:'text-purple-400',  icon:'ph-flask',       dot:'bg-purple-500' },
+  rose:   { bg:'bg-rose-500/10',    border:'border-rose-500/30',    text:'text-rose-400',    icon:'ph-drop-half',   dot:'bg-rose-500' },
+  cyan:   { bg:'bg-cyan-500/10',    border:'border-cyan-500/30',    text:'text-cyan-400',    icon:'ph-syringe',     dot:'bg-cyan-500' },
+  amber:  { bg:'bg-amber-500/10',   border:'border-amber-500/30',   text:'text-amber-400',   icon:'ph-shield-plus', dot:'bg-amber-500' },
+};
+
+/* ============ ESTADO PRINCIPAL ============ */
+const STORAGE_KEY = 'sultan-treatment-v4';
+let state = {
+  startDate: localDateKey(new Date()),
+  checksByDate: {},
+  completedDays: {},
+  firedToday: { date:'', ids:{} },
+  snooze: null,
+  notificationsEnabled: false,
+  soundEnabled: true,
+  muted: false,
+  // Configuración de Supabase
+  supabaseUrl: '',
+  supabaseKey: '',
+  userName: 'Jesús',
+  // Bitácora del día actual
+  clinicalDraft: {
+    appetite: '3',
+    hydration: 'Normal',
+    energy: 'Decaído',
+    temp: '',
+    vomit: 'No',
+    notes: ''
+  }
+};
+
+let supabaseClient = null;
+let realtimeChannel = null;
+
+function loadState(){
+  try {
+    const r = localStorage.getItem(STORAGE_KEY);
+    if(r) state = { ...state, ...JSON.parse(r) };
+  } catch(e){}
+}
+function saveState(){
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch(e){}
+}
+
+/* ============ UTILERÍAS ============ */
+function localDateKey(d=new Date()){
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function parseTime(s){ const[h,m]=s.split(':').map(Number); return h*60+m; }
+function minutesOfDay(d=new Date()){ return d.getHours()*60+d.getMinutes(); }
+function pad(n){ return String(n).padStart(2,'0'); }
+function formatTime12(d){
+  let h=d.getHours(), m=d.getMinutes(), s=d.getSeconds();
+  const ap = h>=12?'PM':'AM'; h=h%12; if(h===0)h=12;
+  return `${pad(h)}:${pad(m)}:${pad(s)} ${ap}`;
+}
+function formatHM(d){
+  let h=d.getHours(), m=d.getMinutes();
+  const ap = h>=12?'PM':'AM'; h=h%12; if(h===0)h=12;
+  return `${pad(h)}:${pad(m)} ${ap}`;
+}
+function timeToDate(t){ const d=new Date(); const[h,m]=t.split(':').map(Number); d.setHours(h,m,0,0); return d; }
+function dayNumber(){
+  const start = new Date(state.startDate+'T00:00:00');
+  const now = new Date(); now.setHours(0,0,0,0);
+  return Math.floor((now-start)/86400000)+1;
+}
+
+/* ============ AUDIO Y ALARMA ============ */
+let audioCtx = null;
+function ensureAudio(){
+  if(!audioCtx){
+    try{ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ return null; }
+  }
+  if(audioCtx.state==='suspended') audioCtx.resume().catch(()=>{});
+  return audioCtx;
+}
+function beep(freq, dur, vol=.35, type='sine', when=0){
+  const ctx = ensureAudio(); if(!ctx) return;
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  o.connect(g); g.connect(ctx.destination);
+  o.type = type; o.frequency.value = freq;
+  const t0 = ctx.currentTime + when;
+  g.gain.setValueAtTime(0, t0);
+  g.gain.linearRampToValueAtTime(vol, t0 + .02);
+  g.gain.linearRampToValueAtTime(0, t0 + dur);
+  o.start(t0); o.stop(t0 + dur + .05);
+}
+function playAlarmPattern(){
+  if(state.muted) return;
+  beep(880,.18,.4,'sine',0);
+  beep(1100,.18,.4,'sine',.25);
+  beep(880,.18,.4,'sine',.5);
+  beep(1100,.22,.4,'sine',.75);
+  beep(1320,.35,.45,'triangle',1.05);
+}
+document.addEventListener('touchstart',()=>ensureAudio(),{once:true,passive:true});
+document.addEventListener('click',()=>ensureAudio(),{once:true});
+
+/* ============ DISPARADOR DE ALARMAS ============ */
+let currentAlarm = null, ringInterval = null, ringingStart = 0;
+
+function triggerAlarm(dose){
+  if(currentAlarm) return;
+  currentAlarm = dose; ringingStart = Date.now();
+  const modal = document.getElementById('alarmModal');
+  document.getElementById('modalDoseName').textContent = dose.name;
+  document.getElementById('modalDoseTime').textContent = formatHM(timeToDate(dose.time));
+  document.getElementById('modalDoseDetail').textContent = `${dose.dose} · ${dose.detail}`;
+  modal.classList.remove('hidden'); modal.classList.add('flex');
+  playAlarmPattern();
+  ringInterval = setInterval(()=>{
+    playAlarmPattern();
+    if(navigator.vibrate) navigator.vibrate([300,150,300,150,500]);
+    const sec = Math.floor((Date.now()-ringingStart)/1000);
+    const el = document.getElementById('modalRingingTime');
+    if(el) el.textContent = `🔔 Sonando desde hace ${sec}s`;
+  }, 2800);
+  if(navigator.vibrate) navigator.vibrate([400,200,400,200,600]);
+  if('Notification' in window && Notification.permission==='granted' && document.hidden){
+    try{
+      const n = new Notification('💊 Sultán: Hora de '+dose.name,{
+        body:`${dose.dose} · ${dose.detail}`, tag:'dose-'+dose.id,
+        requireInteraction:true, silent:false
+      });
+      n.onclick = ()=>{ window.focus(); n.close(); };
+    }catch(e){}
+  }
+}
+function closeAlarm(){
+  const modal = document.getElementById('alarmModal');
+  modal.classList.add('hidden'); modal.classList.remove('flex');
+  if(ringInterval){ clearInterval(ringInterval); ringInterval=null; }
+  if(navigator.vibrate) navigator.vibrate(0);
+  currentAlarm = null;
+}
+function confirmCurrentAlarm(){
+  if(!currentAlarm) return;
+  markDose(currentAlarm.id, true);
+  closeAlarm();
+  setTimeout(checkAlarms, 1500);
+}
+function snoozeAlarm(min=10){
+  if(!currentAlarm) return;
+  const id = currentAlarm.id;
+  state.snooze = { doseId:id, until: Date.now()+min*60000 };
+  delete state.firedToday.ids[id];
+  saveState(); closeAlarm();
+}
+
+function checkAlarms(){
+  const now = new Date();
+  const todayKey = localDateKey(now);
+  const nowMin = minutesOfDay(now);
+  if(state.firedToday.date !== todayKey){
+    state.firedToday = { date:todayKey, ids:{} };
+    state.snooze = null; saveState();
+    renderSchedule(); renderCalendar(); updateStats();
+  }
+  if(state.snooze){
+    if(Date.now() >= state.snooze.until){
+      const dose = SCHEDULE.find(d=>d.id===state.snooze.doseId);
+      state.snooze = null; saveState();
+      if(dose && !isChecked(todayKey,dose.id) && !currentAlarm){
+        triggerAlarm(dose);
+        state.firedToday.ids[dose.id]=true; saveState();
+      }
+    }
+    return;
+  }
+  if(currentAlarm) return;
+  let best=null, bestDiff=Infinity;
+  for(const dose of SCHEDULE){
+    if(state.firedToday.ids[dose.id]) continue;
+    if(isChecked(todayKey,dose.id)) continue;
+    const diff = nowMin - parseTime(dose.time);
+    if(diff>=0 && diff<=120 && diff<bestDiff){ best=dose; bestDiff=diff; }
+  }
+  if(best){
+    state.firedToday.ids[best.id]=true; saveState();
+    triggerAlarm(best);
+  }
+}
+
+/* ============ MANEJO DE TOMAS (CHECKS) ============ */
+function isChecked(dk, id){
+  return !!(state.checksByDate[dk] && state.checksByDate[dk][id]);
+}
+function getDoseMeta(dk, id){
+  return state.checksByDate[dk]?.[id] || null;
+}
+
+async function markDose(id, checked=true){
+  const dk = localDateKey();
+  if(!state.checksByDate[dk]) state.checksByDate[dk] = {};
+  
+  if(checked){
+    state.checksByDate[dk][id] = {
+      takenAt: new Date().toISOString(),
+      by: state.userName || 'Familiar'
+    };
+  } else {
+    delete state.checksByDate[dk][id];
+  }
+
+  const all = SCHEDULE.every(d=>state.checksByDate[dk][d.id]);
+  if(all) state.completedDays[dk]=true; else delete state.completedDays[dk];
+
+  saveState();
+  renderSchedule();
+  renderCalendar();
+  updateStats();
+
+  // Sincronizar en Supabase si está conectado
+  if(supabaseClient){
+    try {
+      const dose = SCHEDULE.find(d=>d.id===id);
+      if(checked){
+        await supabaseClient.from('dose_logs').upsert({
+          dose_id: id,
+          dose_name: dose ? dose.name : id,
+          log_date: dk,
+          scheduled_time: dose ? dose.time : '00:00',
+          administered_by: state.userName || 'Familiar',
+          taken_at: new Date().toISOString()
+        }, { onConflict: 'dose_id, log_date' });
+      } else {
+        await supabaseClient.from('dose_logs').delete().match({ dose_id: id, log_date: dk });
+      }
+      if(all){
+        await supabaseClient.from('completed_days').upsert({
+          day_date: dk,
+          day_number: dayNumber()
+        });
+      } else {
+        await supabaseClient.from('completed_days').delete().match({ day_date: dk });
+      }
+    } catch(err){
+      console.warn('Error sincronizando con Supabase:', err);
+    }
+  }
+}
+
+function resetToday(){
+  if(!confirm('¿Reiniciar todas las tomas registradas de hoy para Sultán?')) return;
+  const dk = localDateKey();
+  state.checksByDate[dk]={};
+  delete state.completedDays[dk];
+  state.firedToday={ date:dk, ids:{} };
+  state.snooze=null; saveState(); closeAlarm();
+  
+  if(supabaseClient){
+    supabaseClient.from('dose_logs').delete().eq('log_date', dk).then(()=>{});
+    supabaseClient.from('completed_days').delete().eq('day_date', dk).then(()=>{});
+  }
+
+  renderSchedule(); renderCalendar(); updateStats();
+}
+
+/* ============ RELOJ / CONTADOR ============ */
+function updateClock(){
+  const el = document.getElementById('liveClock');
+  if(el) el.textContent = formatTime12(new Date());
+}
+function updateNextDose(){
+  const now = new Date(), nowMin = minutesOfDay(now);
+  let next=null;
+  for(const dose of SCHEDULE){
+    const dm = parseTime(dose.time);
+    if(dm > nowMin && (!next || dm < parseTime(next.time))) next = dose;
+  }
+  let target;
+  if(next) target = timeToDate(next.time);
+  else {
+    next = SCHEDULE.reduce((a,b)=> parseTime(a.time) < parseTime(b.time) ? a : b);
+    target = timeToDate(next.time); target.setDate(target.getDate()+1);
+  }
+  const diff = target - now;
+  const h = Math.floor(diff/3600000), m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
+  const el = document.getElementById('nextDoseCountdown');
+  if(el) el.textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
+  const nameEl = document.getElementById('nextDoseName');
+  if(nameEl) nameEl.textContent = `${next.name} · ${formatHM(target)}`;
+}
+
+/* ============ RENDER TIMELINE ============ */
+function renderSchedule(){
+  const c = document.getElementById('scheduleContainer'); if(!c) return;
+  const dk = localDateKey(), nowMin = minutesOfDay();
+  c.innerHTML = SCHEDULE.map(dose=>{
+    const col = COLORS[dose.color];
+    const meta = getDoseMeta(dk, dose.id);
+    const checked = !!meta;
+    const dm = parseTime(dose.time);
+    const isPast = dm < nowMin;
+    const isLate = isPast && !checked;
+
+    let subText = `${dose.dose} · ${dose.detail}`;
+    if(checked && meta && typeof meta === 'object' && meta.takenAt){
+      const takenTime = formatHM(new Date(meta.takenAt));
+      subText = `Administrado a las ${takenTime} por ${meta.by || 'Familiar'}`;
+    }
+
+    return `
+      <div class="bg-slate-900/80 border ${checked?'border-emerald-500/50 bg-emerald-950/20':isLate?'border-rose-500/40':'border-slate-800'} rounded-2xl p-3 sm:p-4 flex items-center gap-3 transition-all">
+        <button onclick="markDose('${dose.id}',${!checked})"
+                class="w-12 h-12 shrink-0 rounded-xl flex items-center justify-center transition active:scale-90 ${checked?'bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/30':'bg-slate-800 border border-slate-700 text-slate-500 hover:border-emerald-500/50 hover:text-emerald-400'}"
+                aria-label="Marcar ${dose.name}">
+          <i class="ph-bold ${checked?'ph-check':'ph-circle'} text-xl"></i>
+        </button>
+        <div class="flex-1 min-w-0">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-xs font-mono font-bold ${checked?'text-emerald-400':isLate?'text-rose-400':'text-slate-300'}">${formatHM(timeToDate(dose.time))}</span>
+            <h4 class="text-sm font-bold ${checked?'text-slate-400 line-through':'text-white'} truncate">${dose.name}</h4>
+            ${isLate?'<span class="text-[9px] font-bold text-rose-400 bg-rose-500/10 border border-rose-500/30 px-1.5 py-0.5 rounded">ATRASADO</span>':''}
+          </div>
+          <p class="text-[11px] text-slate-400 mt-0.5 truncate">
+            <span class="${col.text} font-semibold">${checked ? '✓' : dose.dose}</span> · ${subText}
+          </p>
+        </div>
+        <div class="w-9 h-9 shrink-0 rounded-lg ${col.bg} border ${col.border} ${col.text} flex items-center justify-center text-base">
+          <i class="ph-bold ${col.icon}"></i>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+/* ============ RENDER CALENDARIO ============ */
+function renderCalendar(){
+  const grid = document.getElementById('calendarGrid'); if(!grid) return;
+  const start = new Date(state.startDate+'T00:00:00');
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayKey = localDateKey(today);
+  const html = [];
+  for(let i=0;i<21;i++){
+    const d = new Date(start); d.setDate(d.getDate()+i);
+    const dk = localDateKey(d);
+    const isToday = dk===todayKey, isPast = d<today;
+    const isComplete = state.completedDays[dk] || (dk===todayKey && SCHEDULE.every(x=>isChecked(dk,x.id)));
+    let cls = 'bg-slate-950 border-slate-800 text-slate-500';
+    if(isComplete) cls = 'bg-emerald-500 border-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20';
+    else if(isToday) cls = 'bg-amber-500 border-amber-500 text-slate-950 animate-pulse';
+    else if(isPast) cls = 'bg-slate-800 border-slate-700 text-slate-400';
+    html.push(`
+      <button onclick="toggleDay('${dk}')" class="aspect-square rounded-xl border-2 ${cls} flex flex-col items-center justify-center font-bold text-sm transition active:scale-95 relative">
+        <span class="text-[9px] opacity-70">Día</span>
+        <span class="text-base sm:text-lg leading-none">${i+1}</span>
+        ${isComplete?'<i class="ph-bold ph-check absolute top-1 right-1 text-[10px]"></i>':''}
+      </button>`);
+  }
+  grid.innerHTML = html.join('');
+  const inp = document.getElementById('startDateInput');
+  if(inp && !inp.value) inp.value = state.startDate;
+}
+
+function toggleDay(dk){
+  if(state.completedDays[dk]) delete state.completedDays[dk];
+  else state.completedDays[dk]=true;
+  saveState(); renderCalendar(); updateStats();
+  if(supabaseClient){
+    if(state.completedDays[dk]){
+      supabaseClient.from('completed_days').upsert({ day_date: dk, day_number: dayNumber() }).then(()=>{});
+    } else {
+      supabaseClient.from('completed_days').delete().eq('day_date', dk).then(()=>{});
+    }
+  }
+}
+
+/* ============ ESTADÍSTICAS GLOBALES ============ */
+function updateStats(){
+  const dk = localDateKey();
+  const checkedDoses = SCHEDULE.filter(d=>isChecked(dk,d.id));
+  const checked = checkedDoses.length;
+  const total = SCHEDULE.length;
+  document.getElementById('statTodayCount').textContent = `${checked}/${total}`;
+
+  // Cálculo de suero acumulado hoy (cc)
+  const sueroTaken = checkedDoses.filter(d=>d.type==='syringe').length * 20;
+  const sueroEl = document.getElementById('statSueroCount');
+  if(sueroEl) sueroEl.textContent = `${sueroTaken} / 120 cc`;
+
+  const day = Math.max(1,Math.min(21,dayNumber()));
+  const past = Object.keys(state.completedDays).filter(k=>k!==dk).length;
+  const progress = Math.min(100, Math.round(((past + checked/total)/21)*100));
+  
+  document.getElementById('statGlobalPercent').textContent = `${progress}%`;
+  document.getElementById('statGlobalBar').style.width = `${progress}%`;
+  document.getElementById('statDoxiCount').textContent = `Día ${day} / 21`;
+  document.getElementById('currentDayBadge').textContent = day;
+}
+
+/* ============ GESTOR DE PESTAÑAS ============ */
+function switchTab(name){
+  document.querySelectorAll('.tab-content').forEach(el=>el.classList.add('hidden'));
+  const t = document.getElementById('tab-'+name); if(t) t.classList.remove('hidden');
+  document.querySelectorAll('.tab-btn').forEach(b=>{
+    b.classList.remove('active','bg-emerald-500/10','text-emerald-400','border','border-emerald-500/30');
+    b.classList.add('text-slate-400','hover:text-slate-200','hover:bg-slate-900');
+  });
+  const btn = document.getElementById('btn-'+name);
+  if(btn){
+    btn.classList.remove('text-slate-400','hover:text-slate-200','hover:bg-slate-900');
+    btn.classList.add('active','bg-emerald-500/10','text-emerald-400','border','border-emerald-500/30');
+  }
+}
+
+/* ============ BITÁCORA Y REPORTE WHATSAPP ============ */
+function saveClinicalLogDraft(){
+  state.clinicalDraft = {
+    appetite: document.getElementById('logAppetite').value,
+    hydration: document.getElementById('logHydration').value,
+    energy: document.getElementById('logEnergy').value,
+    temp: document.getElementById('logTemp').value,
+    vomit: document.getElementById('logVomit').value,
+    notes: document.getElementById('logNotes').value
+  };
+  saveState();
+
+  if(supabaseClient){
+    const dk = localDateKey();
+    supabaseClient.from('clinical_logs').upsert({
+      log_date: dk,
+      appetite_score: parseInt(state.clinicalDraft.appetite, 10),
+      hydration_status: state.clinicalDraft.hydration,
+      energy_level: state.clinicalDraft.energy,
+      temperature: state.clinicalDraft.temp ? parseFloat(state.clinicalDraft.temp) : null,
+      vomit_or_diarrhea: state.clinicalDraft.vomit !== 'No',
+      observations: `${state.clinicalDraft.vomit !== 'No' ? '[Vómito/Diarrea: '+state.clinicalDraft.vomit+'] ' : ''}${state.clinicalDraft.notes}`
+    }, { onConflict: 'log_date' }).then(()=>{});
+  }
+}
+
+function loadClinicalDraftIntoForm(){
+  const d = state.clinicalDraft || {};
+  if(d.appetite) document.getElementById('logAppetite').value = d.appetite;
+  if(d.hydration) document.getElementById('logHydration').value = d.hydration;
+  if(d.energy) document.getElementById('logEnergy').value = d.energy;
+  if(d.temp) document.getElementById('logTemp').value = d.temp;
+  if(d.vomit) document.getElementById('logVomit').value = d.vomit;
+  if(d.notes) document.getElementById('logNotes').value = d.notes;
+}
+
+function sendQuickWhatsAppReport(){
+  const dk = localDateKey();
+  const day = dayNumber();
+  const checked = SCHEDULE.filter(d=>isChecked(dk,d.id));
+  const sueroCc = checked.filter(d=>d.type==='syringe').length * 20;
+
+  const draft = state.clinicalDraft || {};
+  
+  let msg = `*REPORTE CLÍNICO DE SULTÁN* 🐾\n`;
+  msg += `📅 *Fecha:* ${dk} (Día ${day} de 21)\n`;
+  msg += `👨‍⚕️ *Médico:* Dr. José Marcano\n\n`;
+
+  msg += `💊 *Tomas administradas hoy (${checked.length}/${SCHEDULE.length}):*\n`;
+  SCHEDULE.forEach(d => {
+    const isDone = isChecked(dk, d.id);
+    msg += `${isDone ? '✅' : '⏳'} ${d.time} - ${d.name} (${d.dose})\n`;
+  });
+
+  msg += `\n💧 *Suero administrado:* ${sueroCc} cc de 120 cc programados\n`;
+  msg += `🥣 *Apetito:* ${draft.appetite || '3'}/5\n`;
+  msg += `⚡ *Ánimo:* ${draft.energy || 'Decaído'}\n`;
+  msg += `💧 *Pliegue cutáneo:* ${draft.hydration || 'Normal'}\n`;
+  if(draft.temp) msg += `🌡️ *Temperatura:* ${draft.temp} °C\n`;
+  if(draft.vomit && draft.vomit !== 'No') msg += `⚠️ *Vómito/Diarrea:* ${draft.vomit}\n`;
+  if(draft.notes) msg += `📝 *Observaciones:* ${draft.notes}\n`;
+
+  const phone = '584169957400';
+  const url = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank');
+}
+
+/* ============ ASISTENTE IA (GEMINI BACKEND VERCEL) ============ */
+const aiConversationHistory = [];
+
+function appendChatMessage(role, text){
+  const container = document.getElementById('aiChatMessages');
+  if(!container) return;
+
+  const isUser = role === 'user';
+  const div = document.createElement('div');
+  div.className = `flex items-start gap-2.5 ${isUser ? 'flex-row-reverse' : ''}`;
+
+  const iconBg = isUser ? 'bg-emerald-500 text-slate-950' : 'bg-amber-500/20 text-amber-400';
+  const icon = isUser ? 'ph-user' : 'ph-sparkle';
+  const bubbleStyle = isUser
+    ? 'bg-emerald-600/30 border border-emerald-500/40 text-emerald-100 rounded-2xl p-3 max-w-[85%] text-xs'
+    : 'bg-slate-950 border border-slate-800 rounded-2xl p-3.5 max-w-[85%] text-slate-200 text-xs leading-relaxed space-y-1.5';
+
+  // Conversión simple de markdown básico
+  let formatted = text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/\n\n/g, '<br/><br/>')
+    .replace(/\n/g, '<br/>');
+
+  div.innerHTML = `
+    <div class="w-7 h-7 rounded-lg ${iconBg} flex items-center justify-center shrink-0 text-xs mt-0.5">
+      <i class="ph-bold ${icon}"></i>
+    </div>
+    <div class="${bubbleStyle}">${formatted}</div>
+  `;
+
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+async function handleSendAiMessage(e){
+  if(e) e.preventDefault();
+  const input = document.getElementById('aiInputText');
+  const text = input.value.trim();
+  if(!text) return;
+  input.value = '';
+  await sendAiQuery(text);
+}
+
+function askPreset(promptText){
+  sendAiQuery(promptText);
+}
+
+async function sendAiQuery(promptText){
+  appendChatMessage('user', promptText);
+  aiConversationHistory.push({ role: 'user', content: promptText });
+
+  const btn = document.getElementById('aiSendBtn');
+  if(btn){ btn.disabled = true; btn.classList.add('opacity-50'); }
+
+  // Placeholder pensando
+  const thinkingId = 'thinking-' + Date.now();
+  const container = document.getElementById('aiChatMessages');
+  const thinkingDiv = document.createElement('div');
+  thinkingDiv.id = thinkingId;
+  thinkingDiv.className = 'flex items-start gap-2.5';
+  thinkingDiv.innerHTML = `
+    <div class="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 text-xs mt-0.5">
+      <i class="ph-bold ph-sparkle animate-spin"></i>
+    </div>
+    <div class="bg-slate-950 border border-slate-800 rounded-2xl p-3 text-slate-400 text-xs italic flex items-center gap-1.5">
+      <span class="animate-pulse">Consultando protocolo de Sultán…</span>
+    </div>
+  `;
+  container.appendChild(thinkingDiv);
+  container.scrollTop = container.scrollHeight;
+
+  try {
+    const dk = localDateKey();
+    const payload = {
+      messages: aiConversationHistory,
+      currentDay: dayNumber(),
+      todayChecks: state.checksByDate[dk] || {}
+    };
+
+    // Llamada a la Vercel Serverless Function /api/chat
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const thinkingEl = document.getElementById(thinkingId);
+    if(thinkingEl) thinkingEl.remove();
+
+    if(!res.ok){
+      const err = await res.json().catch(()=>({}));
+      const fallbackMsg = err.error || 'No se pudo conectar con la IA de Vercel. Asegúrate de configurar GEMINI_API_KEY en tu proyecto de Vercel.';
+      appendChatMessage('assistant', `⚠️ **Aviso:** ${fallbackMsg}\n\nSi necesitas auxilio médico inmediato para Sultán, recuerda contactar directamente al **Dr. José Marcano al 0416-9957400**.`);
+      return;
+    }
+
+    const data = await res.json();
+    const reply = data.reply || 'Sin respuesta.';
+    appendChatMessage('assistant', reply);
+    aiConversationHistory.push({ role: 'assistant', content: reply });
+
+    // Guardar en Supabase si está disponible
+    if(supabaseClient){
+      supabaseClient.from('ai_chat_messages').insert([
+        { role: 'user', content: promptText },
+        { role: 'assistant', content: reply }
+      ]).then(()=>{});
+    }
+
+  } catch(err){
+    const thinkingEl = document.getElementById(thinkingId);
+    if(thinkingEl) thinkingEl.remove();
+    appendChatMessage('assistant', `⚠️ Ocurrió un inconveniente al consultar el servidor: ${err.message}. Ante cualquier duda urgente, comunícate con el **Dr. José Marcano al 0416-9957400**.`);
+  } finally {
+    if(btn){ btn.disabled = false; btn.classList.remove('opacity-50'); }
+  }
+}
+
+/* ============ CONEXIÓN SUPABASE ============ */
+function initSupabase(){
+  if(!window.supabase){
+    console.warn('Supabase SDK no está cargado.');
+    return;
+  }
+  
+  if(!state.supabaseUrl || !state.supabaseKey){
+    updateCloudStatusBadge(false);
+    return;
+  }
+
+  try {
+    supabaseClient = window.supabase.createClient(state.supabaseUrl, state.supabaseKey);
+    updateCloudStatusBadge(true);
+    syncFromSupabase();
+    setupSupabaseRealtime();
+  } catch(err){
+    console.error('Error inicializando cliente de Supabase:', err);
+    updateCloudStatusBadge(false);
+  }
+}
+
+async function syncFromSupabase(){
+  if(!supabaseClient) return;
+  const dk = localDateKey();
+
+  try {
+    // 1. Cargar tomas de hoy
+    const { data: doses, error: doseErr } = await supabaseClient
+      .from('dose_logs')
+      .select('*')
+      .eq('log_date', dk);
+
+    if(!doseErr && doses){
+      if(!state.checksByDate[dk]) state.checksByDate[dk] = {};
+      doses.forEach(row => {
+        state.checksByDate[dk][row.dose_id] = {
+          takenAt: row.taken_at,
+          by: row.administered_by || 'Familiar'
+        };
+      });
+    }
+
+    // 2. Cargar días completados
+    const { data: days, error: daysErr } = await supabaseClient
+      .from('completed_days')
+      .select('*');
+
+    if(!daysErr && days){
+      days.forEach(row => {
+        state.completedDays[row.day_date] = true;
+      });
+    }
+
+    // 3. Cargar configuración de inicio si existe
+    const { data: settings } = await supabaseClient
+      .from('treatment_settings')
+      .select('*')
+      .eq('id', 'sultan_main')
+      .single();
+
+    if(settings && settings.start_date){
+      state.startDate = settings.start_date;
+      const inp = document.getElementById('startDateInput');
+      if(inp) inp.value = state.startDate;
+    }
+
+    saveState();
+    renderSchedule();
+    renderCalendar();
+    updateStats();
+  } catch(e){
+    console.warn('Error al sincronizar datos desde Supabase:', e);
+  }
+}
+
+function setupSupabaseRealtime(){
+  if(!supabaseClient) return;
+  if(realtimeChannel) supabaseClient.removeChannel(realtimeChannel);
+
+  const dk = localDateKey();
+  realtimeChannel = supabaseClient
+    .channel('sultan-realtime-doses')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'dose_logs' }, payload => {
+      if(payload.new && payload.new.log_date === dk){
+        if(!state.checksByDate[dk]) state.checksByDate[dk] = {};
+        state.checksByDate[dk][payload.new.dose_id] = {
+          takenAt: payload.new.taken_at,
+          by: payload.new.administered_by || 'Familiar'
+        };
+      } else if(payload.eventType === 'DELETE' && payload.old){
+        if(state.checksByDate[dk]) delete state.checksByDate[dk][payload.old.dose_id];
+      }
+      saveState();
+      renderSchedule();
+      renderCalendar();
+      updateStats();
+    })
+    .subscribe();
+}
+
+function updateCloudStatusBadge(connected){
+  const dot = document.getElementById('cloudStatusDot');
+  const txt = document.getElementById('cloudStatusText');
+  const badge = document.getElementById('cloudStatusBadge');
+
+  if(connected){
+    if(dot) dot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
+    if(txt) txt.textContent = 'Nube Conectada';
+    if(badge) {
+      badge.className = 'bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1.5 transition';
+    }
+  } else {
+    if(dot) dot.className = 'w-2 h-2 rounded-full bg-slate-500';
+    if(txt) txt.textContent = 'Modo Local';
+    if(badge) {
+      badge.className = 'bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-slate-400 text-[10px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1.5 transition';
+    }
+  }
+}
+
+function toggleCloudModal(show=true){
+  const m = document.getElementById('cloudModal');
+  if(!m) return;
+  if(show){
+    document.getElementById('cfgSupabaseUrl').value = state.supabaseUrl || '';
+    document.getElementById('cfgSupabaseKey').value = state.supabaseKey || '';
+    document.getElementById('cfgUserName').value = state.userName || 'Jesús';
+    document.getElementById('cloudStatusMsg').textContent = supabaseClient ? '✅ Actualmente conectado y sincronizando.' : 'ℹ️ Sin conexión a Supabase activa.';
+    m.classList.remove('hidden'); m.classList.add('flex');
+  } else {
+    m.classList.add('hidden'); m.classList.remove('flex');
+  }
+}
+
+function saveSupabaseConfig(){
+  const url = document.getElementById('cfgSupabaseUrl').value.trim();
+  const key = document.getElementById('cfgSupabaseKey').value.trim();
+  const name = document.getElementById('cfgUserName').value.trim();
+
+  state.supabaseUrl = url;
+  state.supabaseKey = key;
+  state.userName = name || 'Familiar';
+  saveState();
+
+  initSupabase();
+  toggleCloudModal(false);
+  alert('Configuración guardada.');
+}
+
+function disconnectSupabase(){
+  state.supabaseUrl = '';
+  state.supabaseKey = '';
+  saveState();
+  if(realtimeChannel && supabaseClient) supabaseClient.removeChannel(realtimeChannel);
+  supabaseClient = null;
+  updateCloudStatusBadge(false);
+  toggleCloudModal(false);
+  alert('Se ha desconectado Supabase. La aplicación continuará en modo local.');
+}
+
+/* ============ NOTIFICACIONES WEB ============ */
+async function requestNotifications(){
+  if(!('Notification' in window)){ alert('Este navegador no soporta notificaciones de escritorio.'); return; }
+  if(Notification.permission==='granted'){
+    state.notificationsEnabled = true; saveState(); updateNotifBtn();
+    try{ new Notification('✅ Notificaciones activas',{ body:'Recibirás recordatorios para Sultán.' }); }catch(e){}
+    return;
+  }
+  try{
+    const p = await Notification.requestPermission();
+    if(p==='granted'){
+      state.notificationsEnabled = true; saveState(); updateNotifBtn();
+      new Notification('✅ Notificaciones activadas',{ body:'Recibirás recordatorios de las tomas.' });
+    } else alert('Notificaciones bloqueadas. Actívalas en la configuración de permisos de tu navegador.');
+  }catch(e){ alert('Error: '+e.message); }
+}
+
+function updateNotifBtn(){
+  const btn = document.getElementById('notifBtnText');
+  const icon = document.querySelector('#btnNotif i');
+  if(state.notificationsEnabled && 'Notification' in window && Notification.permission==='granted'){
+    if(btn) btn.textContent = 'Notificaciones ON';
+    if(icon) icon.className = 'ph-bold ph-bell-ringing text-emerald-400';
+  } else {
+    if(btn) btn.textContent = 'Activar Notificaciones';
+    if(icon) icon.className = 'ph-bold ph-bell';
+  }
+}
+
+function toggleSound(){
+  state.muted = !state.muted; saveState();
+  const icon = document.getElementById('soundIcon');
+  if(icon) icon.className = state.muted ? 'ph-bold ph-speaker-slash text-rose-400' : 'ph-bold ph-speaker-high';
+  if(!state.muted) playAlarmPattern();
+}
+
+function testAlarm(){ ensureAudio(); triggerAlarm(SCHEDULE[0]); }
+
+function resetStartDate(){
+  state.startDate = localDateKey(new Date()); saveState();
+  document.getElementById('startDateInput').value = state.startDate;
+  renderCalendar(); updateStats();
+  if(supabaseClient){
+    supabaseClient.from('treatment_settings').upsert({ id: 'sultan_main', start_date: state.startDate }).then(()=>{});
+  }
+}
+
+/* ============ INICIALIZACIÓN GLOBAL ============ */
+function init(){
+  loadState();
+  updateNotifBtn();
+  loadClinicalDraftIntoForm();
+
+  const si = document.getElementById('soundIcon');
+  if(si) si.className = state.muted ? 'ph-bold ph-speaker-slash text-rose-400' : 'ph-bold ph-speaker-high';
+
+  const di = document.getElementById('startDateInput');
+  if(di){
+    di.value = state.startDate;
+    di.addEventListener('change', e=>{
+      if(e.target.value){
+        state.startDate = e.target.value; saveState();
+        renderCalendar(); updateStats();
+        if(supabaseClient){
+          supabaseClient.from('treatment_settings').upsert({ id: 'sultan_main', start_date: state.startDate }).then(()=>{});
+        }
+      }
+    });
+  }
+
+  renderSchedule(); renderCalendar(); updateStats();
+  updateClock(); updateNextDose();
+  
+  // Intervalos de actualización
+  setInterval(()=>{ updateClock(); updateNextDose(); }, 1000);
+  setInterval(checkAlarms, 20000);
+
+  document.addEventListener('visibilitychange', ()=>{
+    if(!document.hidden){ checkAlarms(); updateStats(); renderSchedule(); }
+  });
+  window.addEventListener('focus', ()=>{ checkAlarms(); updateStats(); });
+  setTimeout(checkAlarms, 2000);
+
+  // Intentar mantener pantalla activa si está soportado
+  if('wakeLock' in navigator){ navigator.wakeLock.request('screen').catch(()=>{}); }
+
+  // Inicializar Supabase si tiene credenciales
+  initSupabase();
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
