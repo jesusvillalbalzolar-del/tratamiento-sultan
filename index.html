@@ -703,7 +703,7 @@ const SUPABASE_CONFIG = {
   anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdsYnhxY2JjanVkenh4cWF3YmhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4Nzc3NjUsImV4cCI6MjA5MzQ1Mzc2NX0.2VW5APQcbGKpFYfqF0-6LMN5Xmu5qoAqVwV5a4Pq0Lg'
 };
 
-const STORAGE_KEY = 'sultan-multidog-v4';
+const STORAGE_KEY = 'sultan-multidog-v5';
 
 function cleanText(s){
   if(!s || typeof s !== 'string') return '';
@@ -729,16 +729,16 @@ function cleanText(s){
 }
 
 const DEFAULT_MEDICATIONS = [
-  { id: 'sue-5', dog_id: 'dog-sultan', dog_name: 'Sultán', name: 'Suero Subcutáneo #5', dose: '20 cc', scheduled_time: '00:00', detail: 'Hidratación subcutánea (alternar nuca)', med_type: 'syringe', is_active: true },
-  { id: 'sue-6', dog_id: 'dog-sultan', dog_name: 'Sultán', name: 'Suero Subcutáneo #6', dose: '20 cc', scheduled_time: '04:00', detail: 'Hidratación subcutánea (alternar lomo)', med_type: 'syringe', is_active: true },
   { id: 'ome',   dog_id: 'dog-sultan', dog_name: 'Sultán', name: 'Omeprazol', dose: '1 tableta', scheduled_time: '08:00', detail: 'Protector gástrico en ayunas (previo al antibiótico)', med_type: 'pill', is_active: true },
-  { id: 'sue-1', dog_id: 'dog-sultan', dog_name: 'Sultán', name: 'Suero Subcutáneo #1', dose: '20 cc', scheduled_time: '08:00', detail: 'Hidratación subcutánea', med_type: 'syringe', is_active: true },
+  { id: 'sue-1', dog_id: 'dog-sultan', dog_name: 'Sultán', name: 'Suero Subcutáneo #1', dose: '20 cc', scheduled_time: '08:00', detail: 'Hidratación subcutánea (alternar nuca)', med_type: 'syringe', is_active: true },
   { id: 'dox',   dog_id: 'dog-sultan', dog_name: 'Sultán', name: 'Doxiciclina 100mg', dose: '2 cc', scheduled_time: '09:00', detail: 'Antibiótico principal. Con comida. CERO LÁCTEOS.', med_type: 'liquid', is_active: true },
   { id: 'met',   dog_id: 'dog-sultan', dog_name: 'Sultán', name: 'Metrifol', dose: '2 cc', scheduled_time: '10:00', detail: 'Protector y suplemento hepático con comida', med_type: 'liquid', is_active: true },
   { id: 'pent',  dog_id: 'dog-sultan', dog_name: 'Sultán', name: 'Pentaviral', dose: '5 cc', scheduled_time: '10:00', detail: 'Inmunomodulador cada 24 horas', med_type: 'liquid', is_active: true },
-  { id: 'sue-2', dog_id: 'dog-sultan', dog_name: 'Sultán', name: 'Suero Subcutáneo #2', dose: '20 cc', scheduled_time: '12:00', detail: 'Hidratación subcutánea', med_type: 'syringe', is_active: true },
-  { id: 'sue-3', dog_id: 'dog-sultan', dog_name: 'Sultán', name: 'Suero Subcutáneo #3', dose: '20 cc', scheduled_time: '16:00', detail: 'Hidratación subcutánea', med_type: 'syringe', is_active: true },
-  { id: 'sue-4', dog_id: 'dog-sultan', dog_name: 'Sultán', name: 'Suero Subcutáneo #4', dose: '20 cc', scheduled_time: '20:00', detail: 'Hidratación subcutánea', med_type: 'syringe', is_active: true }
+  { id: 'sue-2', dog_id: 'dog-sultan', dog_name: 'Sultán', name: 'Suero Subcutáneo #2', dose: '20 cc', scheduled_time: '11:00', detail: 'Hidratación subcutánea (alternar lomo)', med_type: 'syringe', is_active: true },
+  { id: 'sue-3', dog_id: 'dog-sultan', dog_name: 'Sultán', name: 'Suero Subcutáneo #3', dose: '20 cc', scheduled_time: '14:00', detail: 'Hidratación subcutánea (alternar nuca)', med_type: 'syringe', is_active: true },
+  { id: 'sue-4', dog_id: 'dog-sultan', dog_name: 'Sultán', name: 'Suero Subcutáneo #4', dose: '20 cc', scheduled_time: '17:00', detail: 'Hidratación subcutánea (alternar lomo)', med_type: 'syringe', is_active: true },
+  { id: 'sue-5', dog_id: 'dog-sultan', dog_name: 'Sultán', name: 'Suero Subcutáneo #5', dose: '20 cc', scheduled_time: '20:00', detail: 'Hidratación subcutánea (alternar nuca)', med_type: 'syringe', is_active: true },
+  { id: 'sue-6', dog_id: 'dog-sultan', dog_name: 'Sultán', name: 'Suero Subcutáneo #6', dose: '20 cc', scheduled_time: '22:00', detail: 'Hidratación subcutánea (alternar lomo)', med_type: 'syringe', is_active: true }
 ];
 
 let state = {
@@ -770,7 +770,7 @@ function loadState(){
     }
   } catch(e){}
 
-  if(!state.medications || state.medications.length === 0){
+  if(!state.medications || state.medications.length === 0 || state.medications.some(m => m.scheduled_time === '00:00' || m.scheduled_time === '04:00')){
     state.medications = [...DEFAULT_MEDICATIONS];
   }
 
@@ -1953,7 +1953,7 @@ async function requestNotifications(){
       state.notificationsEnabled = true; saveState();
       document.getElementById('notifBanner').classList.add('hidden');
       scheduleDosesForDay();
-      sendDeviceNotification('🔔 Alarmas Activas para Sultán', 'Recibirás avisos sonoros y notificaciones para cada una de las dosis del día desde las 00:00.');
+      sendDeviceNotification('🔔 Alarmas Activas para Sultán', 'Recibirás avisos sonoros y notificaciones de 08:00 AM a 10:00 PM.');
       checkAlarms();
       alert('¡Permiso concedido! Alarmas y avisos activos para cada dosis del día.');
     }
